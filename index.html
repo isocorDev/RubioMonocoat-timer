@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rubio Finish Timers</title>
+<meta name="description" content="Labeled multi-timers for a Rubio Monocoat Oil Plus 2C session: wipe windows, bleed-back checks, and pot life.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one thumb-friendly column, batch strip on top, surface cards sorted by urgency, add bar fixed to the bottom */
+:root{
+  --bg:#E9EDEA; --surface:#FFFFFF; --ink:#16201B; --muted:#56635C; --line:#C9D1CC;
+  --accent:#8E521A; --accent-ink:#FFFFFF;
+  --work:#2D6A89; --wipe:#B87508; --late:#C2410C; --over:#B42318;
+  --watch:#2A7A68; --due:#B87508; --done:#6A7871;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101412; --surface:#1A201D; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2C3531;
+  --accent:#D9985A; --accent-ink:#1A120A;
+  --work:#6DB6D8; --wipe:#F0B23E; --late:#F8803F; --over:#F26B5E;
+  --watch:#5CC6AD; --due:#F0B23E; --done:#7F8D86; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#101412; --surface:#1A201D; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2C3531;
+  --accent:#D9985A; --accent-ink:#1A120A;
+  --work:#6DB6D8; --wipe:#F0B23E; --late:#F8803F; --over:#F26B5E;
+  --watch:#5CC6AD; --due:#F0B23E; --done:#7F8D86; color-scheme:dark }
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font:16px/1.45 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px calc(110px + env(safe-area-inset-bottom,0px))}
+main{max-width:720px;margin:0 auto;display:grid;gap:16px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;min-height:48px;font-weight:600}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+button.ghost{background:transparent}
+.num{font-variant-numeric:tabular-nums}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font:700 2rem/1 var(--display);letter-spacing:.01em;margin:0;text-wrap:balance}
+h1 small{display:block;font:500 .8rem/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.counts{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font:600 .8rem/1 var(--body);letter-spacing:.04em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.pill b{font:700 1rem/1 var(--display);margin-right:4px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.batch{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
+.batch .k{font:600 .75rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.batch .v{font:700 2.2rem/1 var(--display)}
+.batch .note{grid-column:1/-1;color:var(--muted);font-size:.92rem}
+.batch .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+
+.gauge{display:grid;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.gauge .total{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.gauge .total b{font:700 2.6rem/1 var(--display);color:var(--accent)}
+.gauge .parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.gauge .part{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
+.gauge .part .k{font:600 .72rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.gauge .part .v{font:700 1.6rem/1.1 var(--display);margin-top:4px}
+.bar{height:14px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--accent)}
+.warn{color:var(--late);font-weight:600}
+.sweep{display:flex;gap:8px;flex-wrap:wrap}
+.sweep button{flex:1 1 200px}
+
+#list{display:grid;gap:12px}
+.card{--c:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;
+  background-image:linear-gradient(color-mix(in srgb,var(--c) 9%,transparent),color-mix(in srgb,var(--c) 9%,transparent))}
+.card.alarm{border-color:var(--c);box-shadow:0 0 0 2px var(--c)}
+@media (prefers-reduced-motion:no-preference){.card.alarm{animation:pulse 1.4s ease-in-out infinite}}
+@keyframes pulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 45%,transparent)}}
+.top{display:flex;gap:10px;align-items:center}
+.top input{flex:1;min-width:0;border:0;background:transparent;font:600 1.25rem/1.2 var(--display);letter-spacing:.01em;padding:4px 0;border-bottom:1px dashed transparent}
+.top input:hover,.top input:focus{border-bottom-color:var(--line);outline:none}
+.chip{flex:none;font:700 .8rem/1 var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--c);border:1.5px solid var(--c);border-radius:999px;padding:6px 10px}
+.big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.clock{font:700 3rem/1 var(--display);color:var(--c)}
+.sub{font-weight:600}
+.meta{color:var(--muted);font-size:.9rem}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .primary{flex:1 1 160px;font-size:1.05rem}
+.card .primary{background:var(--c);color:var(--surface)}
+:root[data-theme="dark"] .card .primary{color:#101412}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card .primary{color:#101412}}
+.card.done .primary{display:none}
+
+.empty{text-align:left;color:var(--muted)}
+.empty h2{font:700 1.4rem/1.1 var(--display);color:var(--ink);margin:0 0 8px}
+.empty ol{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:60ch}
+
+details.panel summary{cursor:pointer;font:700 1.15rem/1.2 var(--display);letter-spacing:.02em}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px}
+.grid label{display:grid;gap:4px;font-size:.88rem;color:var(--muted)}
+.grid input{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);min-height:44px;width:100%}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.help{color:var(--muted);font-size:.88rem;margin:12px 0 0;max-width:62ch}
+.check{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.check:last-of-type{border-bottom:0}
+.check input{width:24px;height:24px;accent-color:var(--accent)}
+
+.addbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.addbar form{max-width:720px;margin:0 auto;display:flex;gap:8px}
+.addbar input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);min-height:52px}
+.addbar button{min-height:52px;padding-inline:18px}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:6;
+  background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-weight:600;max-width:min(92vw,520px)}
+</style>
+
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0}</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><small>Rubio Monocoat Oil Plus 2C</small>Finish timers</h1>
+    <div class="counts" id="counts"></div>
+  </header>
+
+  <section class="panel batch" id="batch" aria-label="Batch pot life"></section>
+
+  <details class="panel" id="gaugeBox" open>
+    <summary>How much to mix</summary>
+    <div class="grid">
+      <label for="g-time">Time you'll apply from this batch (min)<input id="g-time" type="number" min="10" max="480" step="5" inputmode="numeric"></label>
+      <label for="g-size">Average surface size (sq ft)<input id="g-size" type="number" min="0.25" max="50" step="0.25" inputmode="decimal"></label>
+      <label for="g-apply">Minutes to apply one surface<input id="g-apply" type="number" min="1" max="20" step="0.5" inputmode="decimal"></label>
+      <label for="g-wipe">Minutes to wipe one surface<input id="g-wipe" type="number" min="1" max="20" step="0.5" inputmode="decimal"></label>
+      <label for="g-cov">Coverage (sq ft per liter)<input id="g-cov" type="number" min="150" max="600" step="10" inputmode="numeric"></label>
+      <label for="g-waste">Extra for pads, rags, cup (%)<input id="g-waste" type="number" min="0" max="50" step="5" inputmode="numeric"></label>
+      <label for="g-area">Or enter total area (sq ft, optional)<input id="g-area" type="number" min="0" max="500" step="1" inputmode="decimal" placeholder="Uses the estimate"></label>
+    </div>
+    <div class="gauge" id="gaugeOut"></div>
+    <p class="help">The estimate uses your sit time and wet-surface limit from Settings: you apply a group, wait for the first one to reach its sit time, then wipe the group. Rubio rates Oil Plus 2C at 300 to 500 sq ft per liter, with open grain like red oak at the low end, so 300 is a safe default. Mixed oil can't be saved, so if your test board used less, lower the coverage number.</p>
+  </details>
+
+  <div class="sweep" id="sweep" hidden>
+    <button class="primary" id="checkAll">Flashlight pass done: mark all checked</button>
+  </div>
+
+  <section id="list" aria-live="polite"></section>
+
+  <section class="panel empty" id="empty">
+    <h2>No surfaces yet</h2>
+    <ol>
+      <li>Tap <b>Mixed a batch</b> when you combine A and B. That starts the pot life clock.</li>
+      <li>Type a surface name below and tap <b>Applied</b> as soon as oil goes on.</li>
+      <li>When the card says <b>Wipe now</b>, wipe it off and tap <b>Wiped</b>.</li>
+      <li>The card then counts down to each bleed-back check. Tap <b>Checked</b> after each flashlight pass until it reads <b>Done</b>.</li>
+    </ol>
+  </section>
+
+  <section class="panel" aria-label="Before you leave the shop">
+    <h2 style="font:700 1.15rem/1.2 var(--display);margin:0 0 6px">Before you leave the shop</h2>
+    <div id="leave"></div>
+    <div class="row"><button class="ghost" id="leaveReset">Clear checklist</button></div>
+  </section>
+
+  <details class="panel">
+    <summary>Settings and alerts</summary>
+    <div class="grid">
+      <label for="s-sit">Let oil sit before wiping (min)<input id="s-sit" type="number" min="1" max="20" step="1" inputmode="numeric"></label>
+      <label for="s-wipe">Wipe deadline after applying (min)<input id="s-wipe" type="number" min="10" max="60" step="1" inputmode="numeric"></label>
+      <label for="s-check">Bleed-back check every (min)<input id="s-check" type="number" min="10" max="90" step="5" inputmode="numeric"></label>
+      <label for="s-watch">Bleed-back watch after wiping (h)<input id="s-watch" type="number" min="1" max="8" step="0.5" inputmode="decimal"></label>
+      <label for="s-pot1">Pot life warning (h)<input id="s-pot1" type="number" min="1" max="8" step="0.5" inputmode="decimal"></label>
+      <label for="s-pot2">Pot life limit (h)<input id="s-pot2" type="number" min="1" max="8" step="0.5" inputmode="decimal"></label>
+      <label for="s-wet">Warn when this many surfaces are wet<input id="s-wet" type="number" min="1" max="10" step="1" inputmode="numeric"></label>
+    </div>
+    <div class="row">
+      <button id="mute"></button>
+      <button id="testSound">Test sound</button>
+      <button id="notify">Turn on notifications</button>
+    </div>
+    <p class="help">Where the numbers come from: Rubio's data sheet says let the oil absorb a few minutes and remove all excess within 30 minutes at most, and use mixed oil within 4 to 6 hours. Rubio's 2024 US floor instructions say let it react at least 5 minutes, start removing excess around 15 minutes, and finish by 30. A 15 minute sit sits at the long end of that range. A space heater makes the air warm and dry, which shortens the window, so if the oil feels tacky or drags when you wipe, drop the sit time to 10.</p>
+    <p class="help">Bleed-back checks are shop practice for open-grain wood, not a Rubio spec: check every 30 minutes for about 4 hours and wipe any beads. Keep this page open with the screen on; phones pause timers in background tabs, though the times stay accurate when you come back.</p>
+    <div class="row"><button class="ghost" id="clearDone">Remove finished surfaces</button><button class="ghost" id="resetAll">Reset everything</button></div>
+  </details>
+</main>
+
+<div class="addbar">
+  <form id="addForm" autocomplete="off">
+    <input id="newLabel" list="labels" placeholder="Surface, e.g. Shelf 2 top" aria-label="Surface name">
+    <datalist id="labels"></datalist>
+    <button class="primary" type="submit">Applied</button>
+  </form>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+const KEY='rubio-finish-timers-v1';
+const MIN=60000, HR=3600000;
+const defaults=()=>({v:2,settings:{sit:15,wipe:30,check:30,watch:4,pot1:4,pot2:6,wet:3},gauge:{time:90,size:4,apply:3,wipe:3,cov:300,waste:15,area:''},muted:false,batches:[],surfaces:[],leave:{},seq:1});
+let st;
+try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!st||!st.settings)st=defaults();
+st.settings=Object.assign(defaults().settings,st.settings);
+if(!st.v||st.v<2){if(st.settings.sit===5)st.settings.sit=15;st.v=2}
+st.gauge=Object.assign(defaults().gauge,st.gauge||{});
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,'0');
+function fmt(ms){const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}:${pad(m)}:${pad(x)}`:`${m}:${pad(x)}`}
+const at=ts=>new Date(ts).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* suggestions */
+const sugg=['Case top','Case bottom','Case left side outside','Case right side outside','Case left side inside','Case right side inside','Case back inside','Case face frame / edges','Door L back','Door L front','Door R back','Door R front','Shelf 1 underside','Shelf 1 top','Shelf 2 underside','Shelf 2 top','Shelf 3 underside','Shelf 3 top','Shelf edges'];
+$('labels').innerHTML=sugg.map(s=>`<option value="${esc(s)}">`).join('');
+
+/* sound, vibration, notifications, wake lock */
+let ac=null, wake=null;
+function unlock(){try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){} keepAwake()}
+document.addEventListener('pointerdown',unlock);
+function beep(n=3){if(st.muted||!ac)return;try{const t0=ac.currentTime;for(let i=0;i<n;i++){const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=i%2?1175:880;g.gain.setValueAtTime(0.0001,t0+i*.3);g.gain.exponentialRampToValueAtTime(.25,t0+i*.3+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+i*.3+.2);o.connect(g).connect(ac.destination);o.start(t0+i*.3);o.stop(t0+i*.3+.22)}}catch(e){}}
+async function keepAwake(){try{if('wakeLock' in navigator&&!wake&&document.visibilityState==='visible'){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null})}}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){keepAwake();tick()}});
+let toastT;
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500)}
+function fire(obj,key,title,body){obj.fired=obj.fired||[];if(obj.fired.includes(key))return;obj.fired.push(key);save();beep(key.startsWith('c')?2:3);try{if(!st.muted&&navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}try{if('Notification' in window&&Notification.permission==='granted')new Notification(title,{body,tag:key+obj.id})}catch(e){}toast(title+(body?': '+body:''))}
+
+/* phases */
+function phase(s,now){
+  const S=st.settings;
+  if(!s.wipedAt){const t=now-s.appliedAt;
+    if(t<S.sit*MIN)return{p:'work',chip:'Working in',c:'--work',clock:fmt(S.sit*MIN-t),sub:'until wipe-off',rank:t};
+    if(t<(S.wipe-5)*MIN)return{p:'wipe',chip:'Wipe now',c:'--wipe',clock:fmt(S.wipe*MIN-t),sub:`left before the ${S.wipe} min limit`,alarm:true,rank:t};
+    if(t<S.wipe*MIN)return{p:'late',chip:'Wipe now',c:'--late',clock:fmt(S.wipe*MIN-t),sub:'left. Wipe this one next',alarm:true,rank:t};
+    return{p:'over',chip:'Overdue',c:'--over',clock:'+'+fmt(t-S.wipe*MIN),sub:'past the wipe limit. Wipe it now',alarm:true,rank:t}}
+  const end=s.wipedAt+S.watch*HR;
+  if(now>=end)return{p:'done',chip:'Done',c:'--done',clock:'Done',sub:'bleed-back watch over',rank:-1};
+  const due=(s.lastCheck||s.wipedAt)+S.check*MIN;
+  if(now>=due)return{p:'due',chip:'Check now',c:'--due',clock:fmt(now-due),sub:'since check was due. Look for beads',alarm:true,rank:now-due,due};
+  return{p:'watch',chip:'Bleed-back watch',c:'--watch',clock:fmt(due-now),sub:'until next check · watch ends '+at(end),rank:-(due-now),due};
+}
+const group={over:0,late:0,wipe:0,due:1,work:2,watch:3,done:4};
+
+/* list rendering (keyed) */
+const els=new Map();
+function makeCard(s){
+  const a=document.createElement('article');a.className='card';a.dataset.id=s.id;
+  a.innerHTML=`<div class="top"><input aria-label="Surface name" id="lbl-${s.id}"><span class="chip"></span></div>
+  <div class="big"><span class="clock num"></span><span class="sub"></span></div>
+  <div class="meta num"></div>
+  <div class="acts"><button class="primary" data-act="main"></button><button data-act="back" hidden>Started 1 min earlier</button><button class="ghost" data-act="rm">Remove</button></div>`;
+  const inp=a.querySelector('input');inp.value=s.label;
+  inp.addEventListener('change',()=>{s.label=inp.value.trim()||s.label;inp.value=s.label;save()});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur()});
+  els.set(s.id,a);return a;
+}
+function tick(){
+  const now=Date.now(),S=st.settings,list=$('list');
+  let wet=0,watching=0,done=0,anyDue=false;
+  const rows=st.surfaces.map(s=>({s,ph:phase(s,now)}));
+  rows.sort((a,b)=>group[a.ph.p]-group[b.ph.p]||b.ph.rank-a.ph.rank);
+  rows.forEach(({s,ph},i)=>{
+    if(['work','wipe','late','over'].includes(ph.p))wet++;else if(ph.p==='done')done++;else watching++;
+    if(ph.p==='due')anyDue=true;
+    /* alerts */
+    if(!s.wipedAt){const t=now-s.appliedAt;
+      if(t>=S.sit*MIN)fire(s,'sit','Wipe now',s.label);
+      if(t>=(S.wipe-5)*MIN)fire(s,'w5','5 minutes left to wipe',s.label);
+      if(t>=S.wipe*MIN)fire(s,'w0','Wipe limit passed',s.label);
+    }else if(ph.p==='due')fire(s,'c'+(s.lastCheck||s.wipedAt),'Bleed-back check',s.label);
+    else if(ph.p==='done')fire(s,'done','Finished watching',s.label);
+    let el=els.get(s.id)||makeCard(s);
+    if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null);
+    el.style.setProperty('--c',`var(${ph.c})`);
+    el.classList.toggle('alarm',!!ph.alarm);el.classList.toggle('done',ph.p==='done');
+    el.querySelector('.chip').textContent=ph.chip;
+    el.querySelector('.clock').textContent=ph.clock;
+    el.querySelector('.sub').textContent=ph.sub;
+    const m=['Applied '+at(s.appliedAt)];
+    if(s.wipedAt)m.push('wiped '+at(s.wipedAt)+' ('+fmt(s.wipedAt-s.appliedAt)+' after applying)');
+    if(s.checks)m.push(s.checks+(s.checks===1?' check':' checks'));
+    el.querySelector('.meta').textContent=m.join(' · ');
+    const main=el.querySelector('[data-act=main]'),back=el.querySelector('[data-act=back]');
+    main.textContent=s.wipedAt?(ph.p==='due'?'Checked, no beads left':'Checked early'):'Wiped';
+    back.hidden=!!s.wipedAt;
+  });
+  for(const [id,el] of els)if(!st.surfaces.find(s=>s.id===id)){el.remove();els.delete(id)}
+  $('empty').hidden=st.surfaces.length>0;
+  $('sweep').hidden=watching===0;
+  $('checkAll').textContent=anyDue?`Flashlight pass done: mark all ${watching} checked`:`Checked all ${watching} early`;
+  $('counts').innerHTML=`<span class="pill num" style="border-color:var(${wet>=S.wet?'--late':'--line'})"><b>${wet}</b>wet</span><span class="pill num"><b>${watching}</b>watching</span><span class="pill num"><b>${done}</b>done</span>`;
+  renderBatch(now);
+}
+
+/* batch */
+function renderBatch(now){
+  const S=st.settings,b=st.batches[st.batches.length-1],box=$('batch');
+  if(!b){box.innerHTML=`<div><div class="k">Batch</div><div class="note" style="margin-top:6px">No batch mixed yet. Pot life starts when A and B are combined.</div></div><div class="acts"><button class="primary" data-b="new">Mixed a batch</button></div>`;return}
+  const t=now-b.mixedAt,w=S.pot1*HR,lim=S.pot2*HR;
+  let v,k,note,c;
+  if(t<w){v=fmt(w-t);k=`Batch ${b.n} · mixed ${at(b.mixedAt)}`;note=`Good to use. ${S.pot1} h mark at ${at(b.mixedAt+w)}.`;c='--watch'}
+  else if(t<lim){v=fmt(lim-t);k=`Batch ${b.n} · mixed ${at(b.mixedAt)}`;note=`Past ${S.pot1} h. Finish what you're on and mix fresh for new surfaces.`;c='--wipe';fire(b,'p1','Pot life warning','Batch '+b.n)}
+  else{v='Spent';k=`Batch ${b.n} · mixed ${at(b.mixedAt)}`;note=`Past ${S.pot2} h. Don't use this batch.`;c='--over';fire(b,'p2','Pot life over','Batch '+b.n)}
+  const sig=k+v+note;if(box.dataset.sig===sig)return;box.dataset.sig=sig;
+  box.innerHTML=`<div><div class="k">${esc(k)}</div><div class="v num" style="color:var(${c})">${v}</div></div><div class="acts"><button data-b="new">Mixed a new batch</button></div><div class="note">${esc(note)}</div>`;
+}
+$('batch').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;st.batches.push({id:uid(),n:st.batches.length+1,mixedAt:Date.now()});st.batches=st.batches.slice(-5);save();$('batch').dataset.sig='';tick();toast('Batch '+st.batches.length+' started. Recap the accelerator.')});
+
+/* actions */
+const armed=new Map();
+$('list').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-act]');if(!btn)return;
+  const id=btn.closest('.card').dataset.id,s=st.surfaces.find(x=>x.id===id);if(!s)return;
+  const act=btn.dataset.act,now=Date.now();
+  if(act==='main'){if(!s.wipedAt){s.wipedAt=now;s.lastCheck=now;toast(`${s.label} wiped. First check at ${at(now+st.settings.check*MIN)}.`)}else{s.lastCheck=now;s.checks=(s.checks||0)+1}}
+  if(act==='back'){s.appliedAt-=MIN}
+  if(act==='rm'){if(armed.get(id)){st.surfaces=st.surfaces.filter(x=>x.id!==id);armed.delete(id)}else{armed.set(id,1);btn.textContent='Tap again to remove';setTimeout(()=>{armed.delete(id);btn.textContent='Remove'},3000);return}}
+  save();tick();
+});
+$('checkAll').addEventListener('click',()=>{const now=Date.now();let n=0;st.surfaces.forEach(s=>{if(s.wipedAt&&now<s.wipedAt+st.settings.watch*HR){s.lastCheck=now;s.checks=(s.checks||0)+1;n++}});save();tick();toast(`Marked ${n} surfaces checked.`)});
+$('addForm').addEventListener('submit',e=>{
+  e.preventDefault();unlock();
+  const inp=$('newLabel');const label=inp.value.trim()||('Surface '+st.seq);st.seq++;
+  st.surfaces.push({id:uid(),label,appliedAt:Date.now()});inp.value='';save();tick();
+  const wet=st.surfaces.filter(s=>!s.wipedAt).length;
+  if(wet>st.settings.wet)toast(`${wet} surfaces wet. Wipe the oldest before adding more.`);else toast(`${label} started. Wipe at ${at(Date.now()+st.settings.sit*MIN)}.`);
+});
+
+/* settings */
+const map={'s-sit':'sit','s-wipe':'wipe','s-check':'check','s-watch':'watch','s-pot1':'pot1','s-pot2':'pot2','s-wet':'wet'};
+for(const [id,k] of Object.entries(map)){const el=$(id);el.value=st.settings[k];el.addEventListener('change',()=>{const v=parseFloat(el.value);if(v>0){st.settings[k]=v;save();$('batch').dataset.sig='';tick()}else el.value=st.settings[k]})}
+const muteLabel=()=>$('mute').textContent=st.muted?'Sound is off: turn on':'Sound is on: mute';
+muteLabel();
+$('mute').addEventListener('click',()=>{st.muted=!st.muted;save();muteLabel()});
+$('testSound').addEventListener('click',()=>{unlock();const m=st.muted;st.muted=false;beep(3);st.muted=m;if(m)toast('Sound is muted for alerts.')});
+$('notify').addEventListener('click',async()=>{try{if(!('Notification' in window))throw 0;const r=await Notification.requestPermission();toast(r==='granted'?'Notifications on.':'Notifications were not allowed. Sound and on-screen alerts still work.')}catch(e){toast('Notifications are not available here. Sound and on-screen alerts still work.')}});
+$('clearDone').addEventListener('click',()=>{const now=Date.now();st.surfaces=st.surfaces.filter(s=>phase(s,now).p!=='done');save();tick()});
+let resetArmed=false;
+$('resetAll').addEventListener('click',e=>{if(!resetArmed){resetArmed=true;e.target.textContent='Tap again to erase all timers';setTimeout(()=>{resetArmed=false;e.target.textContent='Reset everything'},3000);return}
+  const keep={settings:st.settings,muted:st.muted};st=Object.assign(defaults(),keep);save();els.forEach(el=>el.remove());els.clear();$('batch').dataset.sig='';renderLeave();tick();e.target.textContent='Reset everything';resetArmed=false});
+
+/* leave checklist */
+const leaveItems=[['rags','Rags and pads laid flat outside, or sealed in water in a metal can'],['heater','Space heater off'],['accel','Accelerator and oil cans capped'],['pass','Last flashlight pass on every watching surface']];
+function renderLeave(){$('leave').innerHTML=leaveItems.map(([k,t])=>`<label class="check" for="lv-${k}"><input type="checkbox" id="lv-${k}" data-k="${k}" ${st.leave[k]?'checked':''}><span>${t}</span></label>`).join('')}
+renderLeave();
+$('leave').addEventListener('change',e=>{st.leave[e.target.dataset.k]=e.target.checked;save()});
+$('leaveReset').addEventListener('click',()=>{st.leave={};save();renderLeave()});
+
+/* mix gauge */
+const gmap={'g-time':'time','g-size':'size','g-apply':'apply','g-wipe':'wipe','g-cov':'cov','g-waste':'waste','g-area':'area'};
+for(const [id,k] of Object.entries(gmap)){const el=$(id);el.value=st.gauge[k];el.addEventListener('input',()=>{st.gauge[k]=el.value;save();renderGauge()})}
+const up5=x=>Math.ceil(x/5)*5;
+function renderGauge(){
+  const g=st.gauge,S=st.settings,num=(v,d)=>{const x=parseFloat(v);return x>0?x:d};
+  const time=num(g.time,90),size=num(g.size,4),a=num(g.apply,3),w=num(g.wipe,3),cov=num(g.cov,300),waste=Math.max(0,parseFloat(g.waste)||0),n=Math.max(1,Math.round(S.wet));
+  const cycle=Math.max(n*a,a+S.sit)+n*w, per=cycle/n;
+  const surfaces=Math.max(1,Math.floor(time/per));
+  const override=parseFloat(g.area)>0?parseFloat(g.area):0;
+  const area=override||surfaces*size;
+  const raw=area/cov*1000*(1+waste/100);
+  const A=up5(raw*0.75), B=up5(A/3), total=A+B;
+  const pct=Math.min(100,A/275*100);
+  const potMin=S.pot1*60, batches=Math.ceil(time/potMin);
+  let notes=[];
+  if(time>potMin)notes.push(`<p class="warn">That's longer than the ${S.pot1} h pot life. Mix ${batches} batches of about ${up5(A/batches)} ml A + ${up5(A/batches/3)} ml B, one at the start of each ${S.pot1} h stretch.</p>`);
+  if(A>550)notes.push(`<p class="warn">That's more Part A than your two 275 ml cans hold.</p>`);
+  $('gaugeOut').innerHTML=`
+    <div class="total"><b class="num">${total} ml</b><span>mixed, for ${override?'':'about '+surfaces+' surfaces, '}${Math.round(area*10)/10} sq ft</span></div>
+    <div class="parts">
+      <div class="part"><div class="k">Part A oil</div><div class="v num">${A} ml</div><div class="meta">Weigh about ${A} g</div></div>
+      <div class="part"><div class="k">Part B accelerator</div><div class="v num">${B} ml</div><div class="meta">Add a third of A's weight, about ${B} g</div></div>
+      <div class="part"><div class="k">Pace</div><div class="v num">${Math.round(per*10)/10} min</div><div class="meta">per surface, groups of ${n}</div></div>
+    </div>
+    <div><div class="meta" style="margin-bottom:6px">${Math.round(pct)}% of one 275 ml can of Part A</div><div class="bar" role="img" aria-label="${Math.round(pct)} percent of one can"><span style="width:${pct}%"></span></div></div>
+    ${notes.join('')}`;
+}
+renderGauge();
+document.querySelectorAll('#s-sit,#s-wet').forEach(el=>el.addEventListener('change',renderGauge));
+
+tick();setInterval(tick,1000);
+})();
+</script>
+
+</body>
+</html>
