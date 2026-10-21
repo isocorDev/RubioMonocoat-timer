@@ -1,8 +1,6 @@
 # RubioMonocoat-timer
 
-This tool makes it easy to keep track of timing when using Rubio Monocoat on woodworking projects.
-
-It's a single `index.html` with no build step, meant to run on GitHub Pages from a phone in the shop.
+This tool makes it easy to keep track of timing when using Rubio Monocoat on woodworking projects: isocordev.github.io/RubioMonocoat-timer.
 
 ## What it does
 
