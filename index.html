@@ -15,6 +15,7 @@
   --accent:#8E521A; --accent-ink:#FFFFFF;
   --work:#2D6A89; --wipe:#B87508; --late:#C2410C; --over:#B42318;
   --watch:#2A7A68; --due:#B87508; --done:#6A7871; --on-state:#FFFFFF;
+  --f1:#E0782A; --f2:#3D8FC0;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
@@ -82,8 +83,8 @@ details>summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;alig
 .pname{flex:1;min-width:0;border:1px solid transparent;background:transparent;border-radius:8px;padding:6px 8px;font:600 1.15rem/1.2 var(--display);letter-spacing:.01em}
 .pname:hover,.pname:focus{border-color:var(--line);outline:none;background:var(--sunk)}
 .mv{min-width:44px;padding:0;font-size:1.1rem}
-.pmeta{font-size:.86rem;color:var(--muted);padding-left:32px}
-.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-left:32px}
+.pmeta{font-size:.86rem;color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{border:0;border-radius:0;min-height:42px;font-size:.92rem;padding:0 4px;min-width:0;background:transparent;border-left:1px solid var(--line)}
 .seg button:first-child{border-left:0}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
@@ -117,7 +118,7 @@ button.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-co
 .listhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .list{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
 .list:empty{display:none}
-.r{--c:var(--muted);display:grid;grid-template-columns:8px minmax(0,1fr) auto auto;align-items:center;gap:0 10px;min-height:58px;border-top:1px solid var(--line);
+.r{--c:var(--muted);display:grid;grid-template-columns:8px minmax(0,1fr) auto auto;align-items:center;gap:0 8px;min-height:58px;border-top:1px solid var(--line);
   background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),transparent 70%)}
 .r:first-child{border-top:0}
 .r .st{align-self:stretch;background:var(--c)}
@@ -161,6 +162,44 @@ button.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-co
 
 #toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));z-index:12;
   background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-weight:600;max-width:min(92vw,520px);box-shadow:0 6px 20px rgb(0 0 0 / .25)}
+
+/* part icons, expandable rows */
+.ic{width:44px;height:44px;border-radius:8px;background:var(--sunk);flex:none;object-fit:contain;display:inline-grid;place-items:center}
+.ic.big{width:104px;height:104px;border-radius:12px}
+.tile{font:700 .95rem/1 var(--display);color:var(--muted);border:1px solid var(--line)}
+.r .tg{display:flex;align-items:center;gap:10px;min-width:0;border:0;background:transparent;padding:6px 0;text-align:left;min-height:58px;border-radius:0;font-weight:inherit;color:inherit}
+.r button.tg .nm b::after{content:" \25B8";color:var(--muted);font-size:.8em}
+.r.open button.tg .nm b::after{content:" \25BE"}
+.r .det{grid-column:1/-1;padding:2px 12px 12px 18px;display:grid;gap:10px}
+.detin{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.detin dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;margin:0;font-size:.9rem;flex:1;min-width:180px}
+.detin dt{color:var(--muted)} .detin dd{margin:0}
+.thumb{padding:0;border:0;background:transparent;min-height:44px;min-width:44px;border-radius:8px;flex:none}
+.part.sel{box-shadow:inset 4px 0 0 var(--accent)}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block;vertical-align:-2px}
+.sw.f1{background:var(--f1)} .sw.f2{background:var(--f2)}
+
+/* 3D viewer */
+.viewer{display:grid;gap:8px}
+.vbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.vbtns{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.vbtns button{border:0;border-radius:0;min-height:40px;padding:4px 10px;border-left:1px solid var(--line);background:var(--surface);font-size:.9rem}
+.vbtns button:first-child{border-left:0}
+.vex{display:flex;align-items:center;gap:6px;font-size:.86rem;color:var(--muted);flex:1;min-width:140px}
+.vex input{flex:1;min-width:60px;accent-color:var(--accent)}
+.vbar .ghost{min-height:40px;padding:4px 10px;font-size:.9rem}
+.vstage{position:relative;height:min(56vh,460px);min-height:260px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:radial-gradient(circle at 50% 35%,var(--surface),var(--sunk))}
+.vcanvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.vmsg{position:absolute;left:12px;right:12px;bottom:12px;margin:0;color:var(--muted)}
+.vsheet{display:grid;gap:8px}
+.sh-top{display:flex;align-items:center;gap:8px}
+.sh-top .mv{min-width:52px;min-height:48px;font-size:1.2rem}
+.sh-n{flex:1;min-width:0;text-align:center}
+.sh-n b{display:block;font:700 1.25rem/1.15 var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-n span{font-size:.84rem;color:var(--muted)}
+.legend{font-size:.86rem;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.viewer.full{position:fixed;inset:0;z-index:30;background:var(--bg);padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:8px;overflow:auto}
+.viewer.full .vstage{flex:1;height:auto;min-height:200px}
 </style>
 
 <style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
@@ -197,7 +236,18 @@ button.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-co
 
   <section class="panel">
     <div class="step-h"><span class="n">2</span><h2>Choose how each part gets finished</h2></div>
-    <p class="help"><b>2 faces</b> makes two timers, face 1 then face 2 after you flip it. <b>Whole</b> is one timer for the whole part. Rename parts here, before the gloves go on. Check several parts and tap <b>Combine</b> to finish them as one piece, like an assembled case.</p>
+    <p class="help"><b>2 faces</b> makes two timers: <span class="sw f1"></span> face 1 first, then flip for <span class="sw f2"></span> face 2. Do the least visible face first. <b>Whole</b> is one timer for the whole part. Check several parts and tap <b>Combine</b> to finish them as one piece, like an assembled case.</p>
+    <div id="viewer" class="viewer" hidden>
+      <div class="vbar">
+        <div class="vbtns" role="group" aria-label="Camera"><button data-view="fit">Fit</button><button data-view="front">Front</button><button data-view="top">Top</button><button data-view="right">Side</button><button data-view="iso">3/4</button></div>
+        <label class="vex" for="vExplode">Explode <input id="vExplode" type="range" min="0" max="1.2" step="0.01" value="0"></label>
+        <button id="vUp" class="ghost" title="Rotate which way is up">Upright</button>
+        <button id="vShow" class="ghost" hidden>Show all</button>
+        <button id="vFull" class="ghost">Full screen</button>
+      </div>
+      <div id="vStage" class="vstage"><p id="vMsg" class="vmsg" hidden></p></div>
+      <div id="vSheet" class="vsheet"></div>
+    </div>
     <div class="row">
       <label for="order" class="muted" style="font-size:.86rem">Order</label>
       <select id="order" style="border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--sunk);min-height:44px;max-width:100%">
@@ -314,7 +364,7 @@ const dur=m=>{m=Math.round(m);const h=Math.floor(m/60);return h?`${h} h ${m%60} 
 const fresh=()=>({v:3,view:'plan',
   settings:{sit:15,wipe:30,check:30,watch:4,pot1:4,pot2:6,wet:3},
   gauge:{time:90,size:4,apply:3,wipe:3,cov:300,waste:15},
-  plan:{items:[],order:'faces',file:''},
+  plan:{items:[],order:'faces',file:'',flip:{},up:'z',geom:false},
   session:{batches:[],surfaces:[],seq:1},
   prefs:{muted:false,speak:true},leave:{}});
 let st=null;
@@ -350,6 +400,216 @@ function fire(obj,key,title,body,spoken){obj.fired=obj.fired||[];if(obj.fired.in
   try{if('Notification' in window&&Notification.permission==='granted')new Notification(title,{body,tag:key+(obj.id||'')})}catch(e){}
   toast(title+(body?': '+body:''));say(spoken||title+'. '+(body||''))}
 
+/* ---------- geometry, kept in IndexedDB so the 3D view survives a reload ---------- */
+const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+const IDB={db:null,
+  open(){if(this.db)return Promise.resolve(this.db);return new Promise(res=>{try{const r=indexedDB.open('rubio-finish-timers',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{this.db=r.result;res(this.db)};r.onerror=()=>res(null)}catch(e){res(null)}})},
+  async get(k){const db=await this.open();if(!db)return null;return new Promise(res=>{try{const q=db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)}catch(e){res(null)}})},
+  async set(k,v){const db=await this.open();if(!db)return false;return new Promise(res=>{try{const t=db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}})}};
+let GEO=null;
+const UPV={z:[0,0,1],y:[0,1,0],x:[1,0,0]};
+const dot3=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+function analyze(m){
+  const p=m.pos,ix=m.idx,F=m.faces.length/2,fa=new Float64Array(F),fn=new Float64Array(F*3);
+  const mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];
+  for(let i=0;i<p.length;i+=3)for(let k=0;k<3;k++){const v=p[i+k];if(v<mn[k])mn[k]=v;if(v>mx[k])mx[k]=v}
+  let total=0;
+  for(let f=0;f<F;f++){for(let t=m.faces[2*f];t<=m.faces[2*f+1];t++){const A=ix[3*t]*3,B=ix[3*t+1]*3,C=ix[3*t+2]*3,ux=p[B]-p[A],uy=p[B+1]-p[A+1],uz=p[B+2]-p[A+2],vx=p[C]-p[A],vy=p[C+1]-p[A+1],vz=p[C+2]-p[A+2],cx=uy*vz-uz*vy,cy=uz*vx-ux*vz,cz=ux*vy-uy*vx;fa[f]+=Math.sqrt(cx*cx+cy*cy+cz*cz)/2;fn[3*f]+=cx/2;fn[3*f+1]+=cy/2;fn[3*f+2]+=cz/2}total+=fa[f]}
+  const groups=[];
+  for(let f=0;f<F;f++){const L=Math.hypot(fn[3*f],fn[3*f+1],fn[3*f+2]);if(!fa[f]||L/fa[f]<0.98)continue;const n=[fn[3*f]/L,fn[3*f+1]/L,fn[3*f+2]/L];let g=groups.find(q=>dot3(q.n,n)>0.995);if(!g){g={n,area:0,faces:[]};groups.push(g)}g.area+=fa[f];g.faces.push(f)}
+  groups.sort((a,b)=>b.area-a.area);
+  const G1=groups[0],G2=G1&&groups.find(g=>dot3(g.n,G1.n)<-0.995),pair=!!(G1&&G2&&(G1.area+G2.area)>0.4*total);
+  const fg=new Int8Array(F);if(pair){G1.faces.forEach(f=>fg[f]=1);G2.faces.forEach(f=>fg[f]=2)}
+  return{fg,pair,n1:pair?G1.n:null,n2:pair?G2.n:null,total,min:mn,max:mx,center:mn.map((v,k)=>(v+mx[k])/2)};
+}
+function buildGeo(meshes){
+  const g={meshes:meshes.map(m=>Object.assign({},m,{an:analyze(m)}))},mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];
+  g.meshes.forEach(m=>{for(let k=0;k<3;k++){mn[k]=Math.min(mn[k],m.an.min[k]);mx[k]=Math.max(mx[k],m.an.max[k])}});
+  g.center=mn.map((v,k)=>(v+mx[k])/2);return g;
+}
+/* Which broad face is face 1: horizontal panels show the underside first; others show the face that points into the piece. */
+function defaultFlip(an,C,up){if(!an.pair)return false;const u=UPV[up]||UPV.z,nu=dot3(an.n1,u);
+  if(Math.abs(nu)>0.9)return nu>0;
+  const v=[C[0]-an.center[0],C[1]-an.center[1],C[2]-an.center[2]],L=Math.hypot(v[0],v[1],v[2]);if(L<1e-6)return false;
+  const t=dot3(an.n1,v)/L;return Math.abs(t)<0.15?false:t<0;}
+function faceOfTri(m,t){const F=m.faces;let lo=0,hi=F.length/2-1;while(lo<hi){const mid=(lo+hi+1)>>1;if(F[2*mid]<=t)lo=mid;else hi=mid-1}return lo}
+function synthBox(name,mn,sz){const [x0,y0,z0]=mn,x1=x0+sz[0],y1=y0+sz[1],z1=z0+sz[2];
+  const F=[[[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],[x0,y1,z0],[-1,0,0]],[[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],[1,0,0]],[[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1],[0,-1,0]],[[x0,y1,z0],[x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[0,1,0]],[[x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],[0,0,-1]],[[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],[0,0,1]]];
+  const pos=[],nrm=[],idx=[],faces=[];F.forEach((f,i)=>{for(let k=0;k<4;k++){pos.push(...f[k]);nrm.push(...f[4])}const b=i*4;idx.push(b,b+1,b+2,b,b+2,b+3);faces.push(i*2,i*2+1)});
+  return{name,pos:new Float32Array(pos),nrm:new Float32Array(nrm),idx:new Uint32Array(idx),faces:new Uint32Array(faces)}}
+
+/* ---------- three.js: 3D view and part icons ---------- */
+let threeP=null;
+function loadThree(){if(window.THREE)return Promise.resolve(window.THREE);if(!threeP){threeP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';s.onload=()=>window.THREE?res(window.THREE):rej(new Error('3D library missing'));s.onerror=()=>rej(new Error('3D library did not load'));document.head.appendChild(s)});threeP.catch(()=>{threeP=null})}return threeP}
+const COL={wood:0xCFAE85,f1:0xE0782A,f2:0x3D8FC0,ghost:0xA9B3AE,line:0x3a3027,sel:0xE0782A};
+const GCACHE=new Map();
+function geomFor(T,i){let g=GCACHE.get(i);if(g)return g;const m=GEO.meshes[i],geom=new T.BufferGeometry();
+  geom.setAttribute('position',new T.BufferAttribute(m.pos,3));if(m.nrm&&m.nrm.length===m.pos.length)geom.setAttribute('normal',new T.BufferAttribute(m.nrm,3));else geom.computeVertexNormals();
+  geom.setIndex(new T.BufferAttribute(m.idx,1));geom.computeBoundingBox();geom.computeBoundingSphere();
+  g={geom,edges:new T.EdgesGeometry(geom,28),flip:null};GCACHE.set(i,g);groupsFor(i);return g}
+function groupsFor(i){const g=GCACHE.get(i);if(!g)return;const fl=!!st.plan.flip[i];if(g.flip===fl)return;g.flip=fl;const m=GEO.meshes[i],an=m.an,F=m.faces.length/2;g.geom.clearGroups();
+  let cur=-1,start=0;for(let f=0;f<F;f++){const raw=an.fg[f],mat=raw===0?0:((raw===1)!==fl?1:2);if(mat!==cur){if(cur>=0)g.geom.addGroup(start*3,(m.faces[2*f]-start)*3,cur);cur=mat;start=m.faces[2*f]}}
+  g.geom.addGroup(start*3,(m.faces[2*F-1]+1-start)*3,cur)}
+function upRot(root){root.rotation.set(0,0,0);const u=st.plan.up||'z';if(u==='z')root.rotation.x=-Math.PI/2;else if(u==='x')root.rotation.z=Math.PI/2;root.updateMatrixWorld(true)}
+function faceDir(T,n,q){const v=new T.Vector3(n[0],n[1],n[2]).applyQuaternion(q);if(Math.abs(v.y)<0.7){v.y+=0.5;v.add(new T.Vector3(-v.z,0,v.x).multiplyScalar(0.45))}else{v.z+=0.6;v.x+=0.35}return v.normalize()}
+function faceNormal(i,face){const an=GEO.meshes[i].an;if(!an.pair)return null;const fl=!!st.plan.flip[i];return ((face===2)!==fl)?an.n2:an.n1}
+
+/* icons */
+const ICON={cache:new Map(),queue:[],queued:new Set(),busy:false,r:null};
+const initials=n=>String(n||'?').replace(/[^A-Za-z0-9 ]/g,' ').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'?';
+const hasGeo=it=>!!(it&&GEO&&it.meshes&&it.meshes.length&&it.meshes.every(i=>GEO.meshes[i]));
+function iconKey(it,face){return it.id+'|'+face+'|'+it.mode+'|'+it.meshes.map(i=>st.plan.flip[i]?1:0).join('')+'|'+(st.plan.up||'z')}
+function iconHTML(it,face,cls){cls=cls||'ic';if(!hasGeo(it))return `<span class="${cls} tile" aria-hidden="true">${esc(initials(it?it.name:'?'))}</span>`;
+  const k=iconKey(it,face),u=ICON.cache.get(k);if(!u)queueIcon(it.id,face,k);return `<img class="${cls}" data-ik="${esc(k)}" src="${u||BLANK}" alt="">`}
+function queueIcon(id,face,k){if(ICON.queued.has(k))return;ICON.queued.add(k);ICON.queue.push({id,face,k});if(!ICON.busy)setTimeout(runIcons,20)}
+async function runIcons(){if(ICON.busy)return;ICON.busy=true;let T;
+  try{T=await loadThree()}catch(e){ICON.queue=[];ICON.queued.clear();ICON.busy=false;return}
+  let n=0;while(ICON.queue.length){const j=ICON.queue.shift();ICON.queued.delete(j.k);const it=findItem(j.id);if(!hasGeo(it)||iconKey(it,j.face)!==j.k)continue;
+    try{const url=renderIcon(T,it,j.face);ICON.cache.set(j.k,url);document.querySelectorAll('img[data-ik]').forEach(im=>{if(im.dataset.ik===j.k)im.src=url})}catch(e){}
+    if(++n%6===0)await new Promise(r=>setTimeout(r,0))}
+  ICON.busy=false}
+function iconColors(mode,pair,face){if(mode==='skip')return[COL.wood,COL.wood,COL.wood];if(!pair||mode==='whole')return[COL.f1,COL.f1,COL.f1];if(face===2)return[COL.wood,COL.wood,COL.f1];if(face===1||mode==='one')return[COL.wood,COL.f1,COL.wood];return[COL.wood,COL.f1,COL.f2]}
+function renderIcon(T,it,face){
+  if(!ICON.r){ICON.r=new T.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});ICON.r.setPixelRatio(1);ICON.r.setSize(128,128,false);
+    ICON.scene=new T.Scene();ICON.scene.add(new T.HemisphereLight(0xffffff,0x6f6458,0.85));ICON.cam=new T.OrthographicCamera(-1,1,1,-1,0.1,10);const dl=new T.DirectionalLight(0xffffff,0.6);dl.position.set(0.4,1,0.3);ICON.cam.add(dl);ICON.scene.add(ICON.cam);ICON.root=new T.Group();ICON.scene.add(ICON.root)}
+  const root=ICON.root;root.clear();upRot(root);const mats=[];
+  it.meshes.forEach(i=>{const g=geomFor(T,i);groupsFor(i);const ms=iconColors(it.mode,GEO.meshes[i].an.pair,face).map(h=>new T.MeshLambertMaterial({color:h,side:T.DoubleSide}));const mesh=new T.Mesh(g.geom,ms);const lm=new T.LineBasicMaterial({color:COL.line,transparent:true,opacity:.55});mesh.add(new T.LineSegments(g.edges,lm));root.add(mesh);mats.push(...ms,lm)});
+  root.updateMatrixWorld(true);
+  const box=new T.Box3().setFromObject(root),ctr=box.getCenter(new T.Vector3()),R=Math.max(1,box.getSize(new T.Vector3()).length());
+  let dir=new T.Vector3(0.62,0.5,0.9).normalize();
+  if(it.meshes.length===1&&face){const n=faceNormal(it.meshes[0],face);if(n)dir=faceDir(T,n,root.quaternion)}
+  const cam=ICON.cam;cam.up.set(0,1,0);if(Math.abs(dir.y)>0.97)cam.up.set(0,0,-1);cam.position.copy(ctr).addScaledVector(dir,R*2);cam.lookAt(ctr);cam.updateMatrixWorld(true);
+  let mx=0;const inv=cam.matrixWorldInverse;for(let k=0;k<8;k++){const q=new T.Vector3(k&1?box.max.x:box.min.x,k&2?box.max.y:box.min.y,k&4?box.max.z:box.min.z).applyMatrix4(inv);mx=Math.max(mx,Math.abs(q.x),Math.abs(q.y))}
+  mx*=1.08;cam.left=-mx;cam.right=mx;cam.top=mx;cam.bottom=-mx;cam.near=R*0.1;cam.far=R*4;cam.updateProjectionMatrix();
+  ICON.r.render(ICON.scene,cam);const url=ICON.r.domElement.toDataURL('image/png');
+  mats.forEach(m=>m.dispose());root.clear();return url}
+
+/* viewer */
+const V={ready:false,built:false,sel:null,hidden:new Set(),explode:0,az:0.65,el:0.42,dist:2000,objs:new Map(),pendingFace:null,lastTap:{t:0,x:0,y:0},anim:0};
+function resetViewer(){V.sel=null;V.hidden.clear();V.explode=0;$('vExplode').value=0;if(V.ready){V.root.clear();V.objs.clear()}GCACHE.forEach(g=>{g.geom.dispose();g.edges.dispose()});GCACHE.clear();V.built=false;ICON.cache.clear()}
+function findItem(id){return st.plan.items.find(i=>i.id===id)||null}
+function itemOfMesh(i){return st.plan.items.find(it=>it.meshes&&it.meshes.includes(i))||null}
+async function ensureViewer(){
+  const box=$('viewer');if(!GEO||!GEO.meshes.length){box.hidden=true;if($('viewer').classList.contains('full'))toggleFull(false);return}
+  box.hidden=false;if(st.view!=='plan')return;
+  let T;try{T=await loadThree()}catch(e){$('vMsg').textContent='The 3D view needs an internet connection the first time it loads. Everything else works without it.';$('vMsg').hidden=false;return}
+  $('vMsg').hidden=true;
+  if(!V.ready)initViewer(T);
+  if(!V.built)buildScene();
+  resizeViewer();syncViewer();
+}
+function initViewer(T){
+  const wrap=$('vStage'),r=new T.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));r.domElement.className='vcanvas';wrap.appendChild(r.domElement);
+  const scene=new T.Scene(),cam=new T.PerspectiveCamera(30,1,1,1e6);scene.add(new T.HemisphereLight(0xffffff,0x6f6458,0.85));const dl=new T.DirectionalLight(0xffffff,0.6);dl.position.set(0.4,1,0.3);cam.add(dl);scene.add(cam);
+  const root=new T.Group();scene.add(root);
+  Object.assign(V,{T,r,scene,cam,root,ready:true,tgt:new T.Vector3(),ray:new T.Raycaster()});
+  try{new ResizeObserver(resizeViewer).observe(wrap)}catch(e){window.addEventListener('resize',resizeViewer)}
+  gestures(r.domElement);
+}
+function resizeViewer(){if(!V.ready)return;const w=$('vStage').clientWidth,h=$('vStage').clientHeight;if(!w||!h)return;V.r.setSize(w,h,false);V.cam.aspect=w/h;V.cam.updateProjectionMatrix();renderV()}
+function buildScene(){const T=V.T;V.root.clear();V.objs.clear();upRot(V.root);
+  GEO.meshes.forEach((m,i)=>{const g=geomFor(T,i);const mats=[0,1,2].map(()=>new T.MeshLambertMaterial({color:COL.wood,side:T.DoubleSide}));const mesh=new T.Mesh(g.geom,mats);mesh.userData.mi=i;
+    const lines=new T.LineSegments(g.edges,new T.LineBasicMaterial({color:COL.line,transparent:true,opacity:.45}));mesh.add(lines);V.root.add(mesh);V.objs.set(i,{mesh,mats,lines})});
+  V.built=true;syncViewer(true);resizeViewer();fitAll(false,PRESET.iso[0],PRESET.iso[1])}
+function paintView(mats,mode,pair,ghost){let c=[COL.wood,COL.f1,COL.f2];
+  if(mode==='skip')c=[COL.ghost,COL.ghost,COL.ghost];else if(mode==='whole'||!pair)c=[COL.f1,COL.f1,COL.f1];else if(mode==='one')c=[COL.wood,COL.f1,COL.wood];
+  const tr=mode==='skip'||ghost;mats.forEach((m,k)=>{m.color.setHex(c[k]);if(m.transparent!==tr){m.transparent=tr;m.needsUpdate=true}m.opacity=tr?(mode==='skip'?0.12:0.22):1;m.depthWrite=!tr})}
+function syncViewer(noSheet){if(!V.ready||!V.built)return;const C=GEO.center,e=V.explode;
+  V.objs.forEach((o,i)=>{groupsFor(i);const it=itemOfMesh(i),an=GEO.meshes[i].an,mode=it?it.mode:'skip',sel=!!(V.sel&&it&&it.id===V.sel),ghost=!!V.sel&&!sel;
+    paintView(o.mats,mode,an.pair,ghost);o.mats.forEach(m=>m.emissive.setHex(sel?0x2a1a08:0));
+    o.lines.material.color.setHex(sel?COL.sel:COL.line);o.lines.material.opacity=sel?1:(ghost||mode==='skip'?.15:.45);
+    o.mesh.visible=!(it&&V.hidden.has(it.id));o.mesh.renderOrder=(ghost||mode==='skip')?1:0;
+    o.mesh.position.set((an.center[0]-C[0])*e,(an.center[1]-C[1])*e,(an.center[2]-C[2])*e)});
+  V.root.updateMatrixWorld(true);$('vShow').hidden=!V.hidden.size;$('vShow').textContent=`Show all (${V.hidden.size} hidden)`;
+  if(!noSheet)renderSheet();renderV()}
+function renderV(){if(V.ready)V.r.render(V.scene,V.cam)}
+function placeCam(){const c=Math.cos(V.el);V.cam.position.set(V.tgt.x+V.dist*c*Math.sin(V.az),V.tgt.y+V.dist*Math.sin(V.el),V.tgt.z+V.dist*c*Math.cos(V.az));V.cam.near=Math.max(0.5,V.dist/200);V.cam.far=V.dist*50;V.cam.updateProjectionMatrix();V.cam.lookAt(V.tgt);V.cam.updateMatrixWorld(true);renderV()}
+function boxOf(list){const T=V.T,b=new T.Box3(),tmp=new T.Box3();list.forEach(i=>{const o=V.objs.get(i);if(!o||!o.mesh.visible)return;tmp.copy(o.mesh.geometry.boundingBox).applyMatrix4(o.mesh.matrixWorld);b.union(tmp)});return b}
+function camTo(az,el,dist,tgt,anim=true){cancelAnimationFrame(V.anim);const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const da=((az-V.az)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI,s={az:V.az,el:V.el,d:V.dist,t:V.tgt.clone()},T0=performance.now(),D=(reduce||!anim)?0:420;
+  const step=now=>{const k=D?Math.min(1,(now-T0)/D):1,q=1-Math.pow(1-k,3);V.az=s.az+da*q;V.el=s.el+(el-s.el)*q;V.dist=s.d+(dist-s.d)*q;V.tgt.copy(s.t).lerp(tgt,q);placeCam();if(k<1)V.anim=requestAnimationFrame(step)};step(performance.now())}
+function distFor(box){const sz=box.getSize(new V.T.Vector3()),r=Math.max(sz.length()/2,1),vf=V.cam.fov*Math.PI/360,hf=Math.atan(Math.tan(vf)*V.cam.aspect);return r/Math.sin(Math.min(vf,hf))*1.05}
+const PRESET={front:[0,0.06],back:[Math.PI,0.06],left:[-Math.PI/2,0.06],right:[Math.PI/2,0.06],top:[0,1.5],iso:[0.65,0.42]};
+function fitAll(anim=true,az=V.az,el=V.el){const b=boxOf([...V.objs.keys()]);if(b.isEmpty())return;camTo(az,el,distFor(b),b.getCenter(new V.T.Vector3()),anim)}
+function frameItem(it,anim=true,face=1){if(!V.ready||!hasGeo(it))return;const b=boxOf(it.meshes);if(b.isEmpty())return;let az=0.65,el=0.42;
+  if(it.meshes.length===1&&(it.mode==='one'||it.mode==='two')){const n=faceNormal(it.meshes[0],face||1);if(n){const v=faceDir(V.T,n,V.root.quaternion);el=Math.asin(Math.max(-1.45,Math.min(1.45,v.y)));az=Math.atan2(v.x,v.z)}}
+  camTo(az,el,distFor(b)*1.2,b.getCenter(new V.T.Vector3()),anim)}
+function gestures(cv){const pts=new Map();let start=null,moved=false,pin=null;
+  const pinch=()=>{const [a,b]=[...pts.values()];return{x:(a.x+b.x)/2,y:(a.y+b.y)/2,d:Math.max(10,Math.hypot(a.x-b.x,a.y-b.y))}};
+  cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}pts.set(e.pointerId,{x:e.clientX,y:e.clientY});cancelAnimationFrame(V.anim);
+    if(pts.size===1){start={x:e.clientX,y:e.clientY,t:performance.now(),btn:e.button,shift:e.shiftKey};moved=false}else if(pts.size===2){pin=pinch();moved=true}});
+  cv.addEventListener('pointermove',e=>{const p=pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+    if(pts.size===1&&start){if(!moved&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>7)moved=true;if(moved){if(start.btn===2||start.btn===1||start.shift)panBy(dx,dy);else orbitBy(dx,dy)}}
+    else if(pts.size===2&&pin){const q=pinch();zoomBy(pin.d/q.d);panBy(q.x-pin.x,q.y-pin.y);pin=q}});
+  const up=e=>{if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);if(pts.size<2)pin=null;if(pts.size===0){if(!moved&&start&&performance.now()-start.t<450)tapAt(e.clientX,e.clientY);start=null}};
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',e=>{pts.delete(e.pointerId);if(!pts.size)start=null});
+  cv.addEventListener('wheel',e=>{e.preventDefault();zoomBy(Math.exp(e.deltaY*0.0015))},{passive:false});
+  cv.addEventListener('contextmenu',e=>e.preventDefault())}
+function orbitBy(dx,dy){V.az-=dx*0.009;V.el=Math.max(-1.5,Math.min(1.5,V.el+dy*0.009));placeCam()}
+function zoomBy(f){V.dist=Math.max(20,Math.min(1e6,V.dist*f));placeCam()}
+function panBy(dx,dy){const T=V.T,h=$('vStage').clientHeight||300,k=2*V.dist*Math.tan(V.cam.fov*Math.PI/360)/h,r=new T.Vector3().setFromMatrixColumn(V.cam.matrixWorld,0),u=new T.Vector3().setFromMatrixColumn(V.cam.matrixWorld,1);V.tgt.addScaledVector(r,-dx*k).addScaledVector(u,dy*k);placeCam()}
+function pickAt(x,y){const T=V.T,rc=V.r.domElement.getBoundingClientRect(),nd=new T.Vector2((x-rc.left)/rc.width*2-1,-(y-rc.top)/rc.height*2+1);V.ray.setFromCamera(nd,V.cam);
+  const hits=V.ray.intersectObjects([...V.objs.values()].filter(o=>o.mesh.visible).map(o=>o.mesh),false);if(!hits.length)return null;
+  const wrap=h=>{const i=h.object.userData.mi;return{i,item:itemOfMesh(i),tri:h.faceIndex}};
+  if(V.sel){const h=hits.find(h=>{const it=itemOfMesh(h.object.userData.mi);return it&&it.id===V.sel});if(h)return wrap(h)}
+  const solid=hits.find(h=>{const it=itemOfMesh(h.object.userData.mi);return it&&it.mode!=='skip'});return wrap(solid||hits[0])}
+function tapAt(x,y){const now=performance.now(),h=pickAt(x,y),dbl=now-V.lastTap.t<320&&Math.hypot(x-V.lastTap.x,y-V.lastTap.y)<30;
+  if(dbl){clearTimeout(V.pendingFace);V.lastTap.t=0;if(h&&h.item){selectItem(h.item.id);frameItem(h.item)}else fitAll();return}
+  V.lastTap={t:now,x,y};
+  if(!h||!h.item){if(V.sel)selectItem(null);return}
+  if(V.sel!==h.item.id){selectItem(h.item.id);return}
+  clearTimeout(V.pendingFace);V.pendingFace=setTimeout(()=>setFaceFromHit(h),330)}
+function setFaceFromHit(h){const it=h.item,m=GEO.meshes[h.i],an=m.an;
+  if(it.mode==='skip'||it.mode==='whole'){toast('Set this part to 1 face or 2 faces, then tap the face to do first.');return}
+  if(!an.pair){toast('This part has no clear pair of broad faces, so it gets finished as one piece.');return}
+  const g=an.fg[faceOfTri(m,h.tri)];if(!g){toast('That is an edge. Tap a broad face to make it face 1.');return}
+  if(g===(st.plan.flip[h.i]?2:1)){toast('That side is already face 1.');return}
+  st.plan.flip[h.i]=!st.plan.flip[h.i];save();renderPlan();toast('Face 1 is now the side you tapped. Face 2 is the opposite side.')}
+function selectItem(id){V.sel=id;syncViewer();document.querySelectorAll('.part').forEach(p=>p.classList.toggle('sel',p.dataset.id===id))}
+function geoItems(){return st.plan.items.filter(hasGeo)}
+function renderSheet(){const box=$('vSheet'),it=V.sel&&findItem(V.sel);
+  if(!it){box.innerHTML=`<p class="help">Tap a part to select it. The other parts turn see-through so nothing blocks it. Then tap one of its broad faces to make that face 1. Or step through the parts with the arrows and let the view follow. Drag to orbit, pinch to zoom, double tap to zoom to a part.</p><div class="row"><button data-v="step" data-d="1" class="primary">Step through parts</button></div>`;return}
+  const swappable=(it.mode==='one'||it.mode==='two')&&it.meshes.some(i=>GEO.meshes[i].an.pair);
+  const legend=it.mode==='two'?'<span class="sw f1"></span> face 1, done first <span class="sw f2"></span> face 2, after the flip':it.mode==='one'?'<span class="sw f1"></span> the face you finish':it.mode==='whole'?'<span class="sw f1"></span> finished all at once':'Skipped, not finished';
+  const list=geoItems(),ix=list.indexOf(it);
+  box.innerHTML=`<div class="sh-top"><button class="mv" data-v="step" data-d="-1" aria-label="Previous part">&#8592;</button><div class="sh-n"><b>${esc(it.name)}</b><span class="num">${ix+1} of ${list.length} · ${esc(itemMeta(it))}</span></div><button class="mv" data-v="step" data-d="1" aria-label="Next part">&#8594;</button></div>
+    <div class="seg" role="group" aria-label="Finish ${esc(it.name)} as">${MODES.map(([m,l])=>`<button data-vmode="${m}" aria-pressed="${it.mode===m}">${l}</button>`).join('')}</div>
+    <div class="legend">${legend}</div>
+    <div class="row"><button data-v="swap" ${swappable?'':'disabled'}>Swap faces</button><button data-v="frame">Zoom to part</button><button data-v="hide">Hide</button><button data-v="done" class="ghost">Done</button></div>`}
+function toggleFull(on){const v=$('viewer');on=on===undefined?!v.classList.contains('full'):on;v.classList.toggle('full',on);document.body.style.overflow=on?'hidden':'';$('vFull').textContent=on?'Close full screen':'Full screen';setTimeout(()=>{resizeViewer();if(V.sel)frameItem(findItem(V.sel),false);else fitAll(false)},30)}
+$('viewer').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!V.ready)return;
+  if(b.dataset.view){const v=b.dataset.view;if(v==='fit')fitAll(true);else fitAll(true,PRESET[v][0],PRESET[v][1]);return}
+  if(b.id==='vFull')return toggleFull();
+  if(b.id==='vShow'){V.hidden.clear();syncViewer();return}
+  if(b.id==='vUp'){const order=['z','y','x'];st.plan.up=order[(order.indexOf(st.plan.up||'z')+1)%3];save();upRot(V.root);syncViewer();fitAll(true,PRESET.iso[0],PRESET.iso[1]);renderPlan();toast(`Up is now the model's ${st.plan.up.toUpperCase()} axis. Tap again if it is still on its side.`);return}
+  const it=V.sel&&findItem(V.sel);
+  if(b.dataset.vmode&&it){it.mode=b.dataset.vmode;save();renderPlan();return}
+  const a=b.dataset.v;if(!a)return;
+  if(a==='step'){const list=geoItems();if(!list.length)return;const ix=it?list.indexOf(it):-1,d=+b.dataset.d||1,nx=list[((ix<0&&d<0?0:ix)+d+list.length)%list.length];selectItem(nx.id);frameItem(nx);return}
+  if(!it)return;
+  if(a==='swap'){it.meshes.forEach(i=>{if(GEO.meshes[i].an.pair)st.plan.flip[i]=!st.plan.flip[i]});save();renderPlan();toast('Swapped face 1 and face 2.')}
+  else if(a==='frame')frameItem(it);
+  else if(a==='hide'){V.hidden.add(it.id);selectItem(null);fitAll(true)}
+  else if(a==='done'){selectItem(null);fitAll(true,PRESET.iso[0],PRESET.iso[1])}
+});
+$('vExplode').addEventListener('input',e=>{V.explode=+e.target.value;syncViewer(true);if(!V.sel)fitAll(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('viewer').classList.contains('full'))toggleFull(false)});
+
+async function importMeshes(list,file){
+  resetViewer();GEO=buildGeo(list);st.plan.up=st.plan.up||'z';st.plan.flip={};
+  GEO.meshes.forEach((m,i)=>{st.plan.flip[i]=defaultFlip(m.an,GEO.center,st.plan.up)});
+  const parts=GEO.meshes.map((m,i)=>({raw:m.name,area:m.an.total/MM2_PER_SQFT,dims:[0,1,2].map(k=>m.an.max[k]-m.an.min[k]).sort((a,b)=>b-a),mesh:i,pair:m.an.pair}));
+  cleanNames(parts);
+  st.plan.items=parts.map(p=>({id:uid(),name:p.name,area:p.area,dims:p.dims,meshes:[p.mesh],mode:defaultMode(p.name,p.area,p.pair)}));
+  st.plan.file=file||'';
+  st.plan.geom=await IDB.set('geom',{meshes:GEO.meshes.map(({name,pos,nrm,idx,faces})=>({name,pos,nrm,idx,faces}))});
+  save();renderPlan();ensureViewer();
+}
+function meshesFromOcct(res){const out=[];
+  (function walk(n){(n.meshes||[]).forEach(i=>{const m=res.meshes[i],tris=m.index.array.length/3,bf=(m.brep_faces&&m.brep_faces.length)?m.brep_faces:[{first:0,last:tris-1}],faces=new Uint32Array(bf.length*2);bf.forEach((f,k)=>{faces[2*k]=f.first;faces[2*k+1]=f.last});
+    out.push({name:m.name||n.name||'Part',pos:new Float32Array(m.attributes.position.array),nrm:m.attributes.normal?new Float32Array(m.attributes.normal.array):null,idx:new Uint32Array(m.index.array),faces})});(n.children||[]).forEach(walk)})(res.root);
+  return out}
+
 /* ---------- plan ---------- */
 const MODES=[['skip','Skip'],['one','1 face'],['two','2 faces'],['whole','Whole']];
 const HARDWARE=/\b(hinges?|screws?|bolts?|nuts?|washers?|knobs?|pulls?|handles?|brackets?|pins?|dowels?|cams?|slides?|glides?|magnets?|catch|latch|hardware|fasteners?|levelers?|blum)\b/i;
@@ -358,9 +618,9 @@ function planSurfaces(){
   const A=i=>i.area!=null?i.area:size*(i.mode==='whole'?1:2);
   const first=[],second=[],out=[];
   items.forEach(i=>{const a=A(i);
-    if(i.mode==='whole'){const s={key:i.id,label:i.name,area:a};first.push(s);out.push(s)}
-    else if(i.mode==='one'){const s={key:i.id+':1',label:i.name,area:a/2};first.push(s);out.push(s)}
-    else{const s1={key:i.id+':1',label:i.name+' · face 1',area:a/2},s2={key:i.id+':2',label:i.name+' · face 2',area:a/2};first.push(s1);second.push(s2);out.push(s1,s2)}});
+    if(i.mode==='whole'){const s={key:i.id,itemId:i.id,face:0,label:i.name,area:a};first.push(s);out.push(s)}
+    else if(i.mode==='one'){const s={key:i.id+':1',itemId:i.id,face:1,label:i.name,area:a/2};first.push(s);out.push(s)}
+    else{const s1={key:i.id+':1',itemId:i.id,face:1,label:i.name+' · face 1',area:a/2},s2={key:i.id+':2',itemId:i.id,face:2,label:i.name+' · face 2',area:a/2};first.push(s1);second.push(s2);out.push(s1,s2)}});
   return st.plan.order==='parts'?out:first.concat(second);
 }
 function pending(){const used=new Set(st.session.surfaces.map(s=>s.key).filter(Boolean));return planSurfaces().filter(s=>!used.has(s.key))}
@@ -374,8 +634,8 @@ function itemMeta(i){const bits=[];if(i.dims)bits.push(i.dims.map(fmtIn).join(' 
 function renderPlan(){
   const box=$('parts'),items=st.plan.items;
   $('planEmpty').hidden=items.length>0;box.hidden=!items.length;
-  box.innerHTML=items.map((i,ix)=>`<div class="part${i.mode==='skip'?' skip':''}" data-id="${i.id}">
-    <div class="ptop"><input type="checkbox" aria-label="Select ${esc(i.name)}" data-sel ${i.sel?'checked':''}>
+  box.innerHTML=items.map((i,ix)=>`<div class="part${i.mode==='skip'?' skip':''}${V.sel===i.id?' sel':''}" data-id="${i.id}">
+    <div class="ptop"><button class="thumb" data-thumb aria-label="Show ${esc(i.name)} in 3D">${iconHTML(i,0)}</button><input type="checkbox" aria-label="Select ${esc(i.name)} to combine" data-sel ${i.sel?'checked':''}>
       <input class="pname" id="pn-${i.id}" value="${esc(i.name)}" aria-label="Part name">
       <button class="mv ghost" data-mv="-1" aria-label="Move up" ${ix===0?'disabled':''}>&#8593;</button><button class="mv ghost" data-mv="1" aria-label="Move down" ${ix===items.length-1?'disabled':''}>&#8595;</button></div>
     <div class="pmeta num">${esc(itemMeta(i))}${i.members?' <button class="ghost" data-split style="min-height:32px;padding:2px 10px;margin-left:6px">Split</button>':''}</div>
@@ -386,6 +646,8 @@ function renderPlan(){
   $('planSum').innerHTML=items.length?`<div><b class="num">${ps.length}</b><span class="k">timers</span></div><div><b class="num">${r1(area)}</b><span class="k">sq ft</span></div><div><b class="num">${skipped}</b><span class="k">skipped</span></div>`:'';
   $('g-time-l').hidden=ps.length>0;
   renderGauge();
+  if(V.sel&&!findItem(V.sel))V.sel=null;
+  syncViewer();
 }
 $('parts').addEventListener('click',e=>{
   const p=e.target.closest('.part');if(!p)return;const items=st.plan.items,ix=items.findIndex(i=>i.id===p.dataset.id),it=items[ix];if(!it)return;
@@ -393,25 +655,27 @@ $('parts').addEventListener('click',e=>{
   if(m){it.mode=m.dataset.mode}
   else if(mv){const j=ix+ +mv.dataset.mv;if(j<0||j>=items.length)return;[items[ix],items[j]]=[items[j],items[ix]]}
   else if(e.target.closest('[data-split]')){items.splice(ix,1,...it.members.map(x=>Object.assign(x,{sel:false})))}
+  else if(e.target.closest('[data-thumb]')){if(!hasGeo(it)){toast('This part has no 3D shape. Load a STEP file to see parts in 3D.');return}selectItem(it.id);frameItem(it);$('viewer').scrollIntoView({behavior:'smooth',block:'start'});return}
   else if(e.target.matches('[data-sel]')){it.sel=e.target.checked}
   else return;
   save();renderPlan();
 });
 $('parts').addEventListener('input',e=>{if(!e.target.classList.contains('pname'))return;const it=st.plan.items.find(i=>i.id===e.target.closest('.part').dataset.id);if(it){it.name=e.target.value;save()}});
-$('parts').addEventListener('change',e=>{if(e.target.classList.contains('pname')){const it=st.plan.items.find(i=>i.id===e.target.closest('.part').dataset.id);if(it&&!it.name.trim()){it.name='Part';e.target.value='Part';save()}renderGauge()}});
+$('parts').addEventListener('change',e=>{if(e.target.classList.contains('pname')){const it=st.plan.items.find(i=>i.id===e.target.closest('.part').dataset.id);if(it&&!it.name.trim()){it.name='Part';e.target.value='Part';save()}renderGauge();renderSheet()}});
 $('order').addEventListener('change',e=>{st.plan.order=e.target.value;save();renderPlan()});
 $('combine').addEventListener('click',()=>{const items=st.plan.items,sel=items.filter(i=>i.sel);if(sel.length<2)return;
   const ix=items.indexOf(sel[0]),known=sel.every(i=>i.area!=null);
-  const merged={id:uid(),name:sel.length<=3?sel.map(i=>i.name).join(' + '):'Combined: '+sel[0].name+' and '+(sel.length-1)+' more',area:known?sel.reduce((t,i)=>t+i.area,0):null,dims:null,mode:'two',members:sel.map(i=>Object.assign({},i,{sel:false}))};
+  const merged={id:uid(),name:sel.length<=3?sel.map(i=>i.name).join(' + '):'Combined: '+sel[0].name+' and '+(sel.length-1)+' more',area:known?sel.reduce((t,i)=>t+i.area,0):null,dims:null,mode:'two',meshes:sel.flatMap(i=>i.meshes||[]),members:sel.map(i=>Object.assign({},i,{sel:false}))};
   st.plan.items=items.filter(i=>!i.sel);st.plan.items.splice(ix,0,merged);save();renderPlan();toast('Combined. Tap the name to rename it, for example "Case".')});
 let clearArmed=false;
 $('clearPlan').addEventListener('click',e=>{if(!clearArmed){clearArmed=true;e.target.textContent='Tap again to clear';setTimeout(()=>{clearArmed=false;e.target.textContent='Clear plan'},3000);return}
-  st.plan.items=[];st.plan.file='';save();renderPlan();e.target.textContent='Clear plan';clearArmed=false;$('stepStatus').textContent=''});
+  st.plan.items=[];st.plan.file='';GEO=null;resetViewer();st.plan.geom=false;st.plan.flip={};IDB.set('geom',null);save();renderPlan();ensureViewer();e.target.textContent='Clear plan';clearArmed=false;$('stepStatus').textContent=''});
 
-function defaultMode(name,area){return (HARDWARE.test(name)||(area!=null&&area<0.15))?'skip':'two'}
+function defaultMode(name,area,pair){return (HARDWARE.test(name)||(area!=null&&area<0.15))?'skip':(pair===false?'whole':'two')}
 function setItems(parts,file){
+  GEO=null;resetViewer();st.plan.geom=false;st.plan.flip={};IDB.set('geom',null);
   st.plan.items=parts.map(p=>({id:uid(),name:p.name,area:p.area,dims:p.dims||null,qty:p.qty||1,mode:defaultMode(p.name,p.area)}));
-  st.plan.file=file||'';save();renderPlan();
+  st.plan.file=file||'';save();renderPlan();ensureViewer();
 }
 $('addTyped').addEventListener('click',()=>{
   const lines=$('typed').value.split('\n').map(l=>l.trim()).filter(Boolean);if(!lines.length){toast('Type at least one part name.');return}
@@ -420,9 +684,11 @@ $('addTyped').addEventListener('click',()=>{
   $('typed').value='';save();renderPlan();toast(`Added ${lines.length} parts.`)});
 
 /* ---------- STEP import ---------- */
-const SAMPLE=[['Side:1',603870,[914.4,304.8,19.05]],['Side:2',603870,[914.4,304.8,19.05]],['Top',480483,[723.9,304.8,19.05]],['Bottom',480483,[723.9,304.8,19.05]],['Back',1289030,[876.3,723.9,6.35]],['Shelf:1',432137,[721.9,273.1,19.05]],['Shelf:2',432137,[721.9,273.1,19.05]],['Shelf:3',432137,[721.9,273.1,19.05]],['Door:1',739209,[910.4,379,19.05]],['Door:2',739209,[910.4,379,19.05]],['Blum hinge cup:1',3222,[35,34.7,12]],['Blum hinge cup:2',3222,[35,34.7,12]],['Blum hinge cup:3',3222,[35,34.7,12]],['Blum hinge cup:4',3222,[35,34.7,12]]];
-$('sample').addEventListener('click',()=>{const parts=SAMPLE.map(([raw,a,d])=>({raw,area:a/MM2_PER_SQFT,dims:d}));cleanNames(parts);setItems(parts,'sample');
-  $('stepStatus').textContent='Loaded a sample 30 × 36 × 12 in bookshelf with 14 parts. The 4 hinge cups are set to Skip.'});
+const SAMPLE_BOXES=[["Side:1",[0,0,0],[19.05,304.8,914.4]],["Side:2",[742.95,0,0],[19.05,304.8,914.4]],["Top",[19.05,0,895.35],[723.9,304.8,19.05]],["Bottom",[19.05,0,0],[723.9,304.8,19.05]],["Back",[19.05,298.45,19.05],[723.9,6.35,876.3]],["Shelf:1",[20.05,0,228.6],[721.9,273.05,19.05]],["Shelf:2",[20.05,0,457.2],[721.9,273.05,19.05]],["Shelf:3",[20.05,0,685.8],[721.9,273.05,19.05]],["Door:1",[1,-19.05,2],[379,19.05,910.4]],["Door:2",[382,-19.05,2],[379,19.05,910.4]],["Blum hinge cup:1",[22.5,-48.42,194],[35,34.74,12]],["Blum hinge cup:2",[22.5,-48.42,694],[35,34.74,12]],["Blum hinge cup:3",[704.5,-48.42,194],[35,34.74,12]],["Blum hinge cup:4",[704.5,-48.42,694],[35,34.74,12]]];
+$('sample').addEventListener('click',async()=>{const stat=$('stepStatus');stat.textContent='Loading the sample bookshelf...';let r={ok:false};
+  try{const res=await fetch('samples/sample-bookshelf.step');if(!res.ok)throw new Error('missing');r=await importStepBuffer(await res.arrayBuffer(),'sample bookshelf')}catch(e){}
+  if(!r.ok){st.plan.up='z';await importMeshes(SAMPLE_BOXES.map(([n,mn,sz])=>synthBox(n,mn,sz)),'sample bookshelf')}
+  stat.textContent='Loaded a sample 30 × 36 × 12 in bookshelf with 14 parts. The 4 hinge cups are set to Skip.'});
 
 function cleanNames(parts){
   parts.forEach(p=>{let n=String(p.raw||'').trim().replace(/\s+v\d+$/i,'').replace(/\s*\(\d+\)$/,'');const m=n.match(/^(.*?):(\d+)$/);p.base=(m?m[1]:n).trim()||'Part';p.inst=m?+m[2]:null});
@@ -442,13 +708,6 @@ function loadOcct(){
   occtP.catch(()=>{occtP=null});
   return occtP;
 }
-function meshArea(m){const p=m.attributes.position.array,ix=m.index.array;let a=0;for(let i=0;i<ix.length;i+=3){const A=ix[i]*3,B=ix[i+1]*3,C=ix[i+2]*3,ux=p[B]-p[A],uy=p[B+1]-p[A+1],uz=p[B+2]-p[A+2],vx=p[C]-p[A],vy=p[C+1]-p[A+1],vz=p[C+2]-p[A+2],cx=uy*vz-uz*vy,cy=uz*vx-ux*vz,cz=ux*vy-uy*vx;a+=Math.sqrt(cx*cx+cy*cy+cz*cz)/2}return a}
-function meshBox(m){const p=m.attributes.position.array,mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];for(let i=0;i<p.length;i+=3)for(let k=0;k<3;k++){const v=p[i+k];if(v<mn[k])mn[k]=v;if(v>mx[k])mx[k]=v}return mx.map((v,k)=>v-mn[k]).sort((a,b)=>b-a)}
-function partsFromOcct(res){
-  const out=[];
-  (function walk(n){(n.meshes||[]).forEach(i=>{const m=res.meshes[i];out.push({raw:m.name||n.name||'Part',area:meshArea(m)/MM2_PER_SQFT,dims:meshBox(m)})});(n.children||[]).forEach(walk)})(res.root);
-  return out;
-}
 function partsFromText(txt){
   const prod={},form={},pd={},nauo=[];
   txt.replace(/#(\d+)\s*=\s*PRODUCT\s*\(\s*'((?:[^']|'')*)'/g,(m,id,n)=>{prod[id]=n.replace(/''/g,"'")});
@@ -459,25 +718,24 @@ function partsFromText(txt){
   const parents=new Set(nauo.map(x=>x.par));
   return nauo.filter(x=>!parents.has(x.ch)).map(x=>({raw:x.name||pd[x.ch]||'Part',area:null}));
 }
+async function importStepBuffer(buf,name){const stat=$('stepStatus');
+  try{stat.textContent='Loading the STEP reader. It is about 7.6 MB the first time, then cached.';const occt=await loadOcct();
+    stat.textContent=`Measuring parts in ${name}...`;await new Promise(r=>setTimeout(r,30));
+    const res=occt.ReadStepFile(new Uint8Array(buf),{linearUnit:'millimeter',linearDeflectionType:'bounding_box_ratio',linearDeflection:0.002,angularDeflection:0.5});
+    if(!res||!res.success)throw new Error('the reader could not open this file');
+    const list=meshesFromOcct(res);if(!list.length)throw new Error('the file has no solid parts');
+    await importMeshes(list,name);return{ok:true,count:list.length}}
+  catch(err){return{ok:false,err}}}
 $('stepFile').addEventListener('change',async e=>{
   const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
   const stat=$('stepStatus');stat.textContent=`Reading ${f.name}...`;
-  const buf=await f.arrayBuffer();
-  let parts=null,how='';
-  try{
-    stat.textContent='Loading the STEP reader. It is about 7.6 MB the first time, then cached.';
-    const occt=await loadOcct();
-    stat.textContent=`Measuring parts in ${f.name}...`;await new Promise(r=>setTimeout(r,30));
-    const res=occt.ReadStepFile(new Uint8Array(buf),{linearUnit:'millimeter',linearDeflectionType:'bounding_box_ratio',linearDeflection:0.002,angularDeflection:0.5});
-    if(!res||!res.success)throw new Error('the reader could not open this file');
-    parts=partsFromOcct(res);how='with surface areas';
-  }catch(err){
-    try{parts=partsFromText(new TextDecoder().decode(buf));how=`names only, because ${err.message}. Enter areas by hand or set "Size of a part with no area" below`}catch(e2){parts=null}
-  }
-  if(!parts||!parts.length){stat.textContent=`No parts found in ${f.name}. Check that it is a STEP file (.step or .stp).`;return}
-  cleanNames(parts);setItems(parts,f.name);
+  const buf=await f.arrayBuffer();const r=await importStepBuffer(buf,f.name);let count=0,how='';
+  if(r.ok){count=r.count;how='with sizes, surface areas and a 3D view'}
+  else{let parts=null;try{parts=partsFromText(new TextDecoder().decode(buf))}catch(e2){}
+    if(!parts||!parts.length){stat.textContent=`No parts found in ${f.name}. Check that it is a STEP file (.step or .stp).`;return}
+    cleanNames(parts);setItems(parts,f.name);count=parts.length;how=`names only, because ${r.err&&r.err.message||'the reader failed'}. Enter areas by hand or set "Size of a part with no area" below`}
   const sk=st.plan.items.filter(i=>i.mode==='skip').length;
-  stat.textContent=`Found ${parts.length} parts in ${f.name}, ${how}.${sk?` ${sk} small or hardware-looking parts are set to Skip.`:''}`;
+  stat.textContent=`Found ${count} parts in ${f.name}, ${how}.${sk?` ${sk} small or hardware-looking parts are set to Skip.`:''}`;
 });
 
 /* ---------- gauge ---------- */
@@ -542,7 +800,8 @@ let warnedBatch=false;
 function apply(t){
   const now=Date.now(),label=t?t.label:('Surface '+st.session.seq);
   snap('Applied '+label);if(!t)st.session.seq++;
-  st.session.surfaces.push({id:uid(),key:t?t.key:null,label,area:t?t.area:null,appliedAt:now,fired:[]});
+  const bt=st.session.batches[st.session.batches.length-1];
+  st.session.surfaces.push({id:uid(),key:t?t.key:null,itemId:t?t.itemId||null:null,face:t?t.face||0:0,label,area:t?t.area:null,appliedAt:now,batch:batchOK()&&bt?bt.n:null,fired:[]});
   save();tick();
   const msg=`${label} started. Wipe at ${at(now+st.settings.sit*MIN)}.`;
   if(!batchOK()&&!warnedBatch){warnedBatch=true;toast(msg+' Tap Mixed when you mix a batch so pot life is tracked.')}else toast(msg);
@@ -578,12 +837,25 @@ const els=new Map();
 function rowEl(s){
   let el=els.get(s.id);if(el)return el;
   el=document.createElement('div');el.className='r';el.dataset.id=s.id;
-  el.innerHTML=`<span class="st"></span><div class="nm"><b></b><span></span></div><span class="ck num"></span><button class="go"></button><div class="ed"><input aria-label="Rename"><button class="ghost" data-rm>Remove</button></div>`;
+  el.innerHTML=`<span class="st"></span><button class="tg" aria-expanded="false"><span class="icw"></span><span class="nm"><b></b><span></span></span></button><span class="ck num"></span><button class="go"></button><div class="ed"><input aria-label="Rename"><button class="ghost" data-rm>Remove</button></div><div class="det" hidden></div>`;
   const inp=el.querySelector('.ed input');inp.value=s.label;
   inp.addEventListener('change',()=>{const x=st.session.surfaces.find(q=>q.id===s.id);if(x&&inp.value.trim()){x.label=inp.value.trim();save();tick()}});
   els.set(s.id,el);return el;
 }
+function itemFor(s){const id=s.itemId||(s.key?String(s.key).split(':')[0]:null);return id?findItem(id):null}
+function detailHTML(s,ph){const it=itemFor(s),S=st.settings,face=s.face||0,rows=[];
+  rows.push(['Now',ph.state+(ph.detail?', '+ph.detail:'')]);
+  if(face)rows.push(['Face',face===1?'Face 1 (highlighted), done first':'Face 2 (highlighted), after the flip']);
+  if(it&&it.dims)rows.push(['Size',it.dims.map(fmtIn).join(' × ')+' in']);
+  if(s.area)rows.push(['Area',r1(s.area)+' sq ft']);
+  rows.push(['Applied',at(s.appliedAt)+(s.batch?`, batch ${s.batch}`:'')]);
+  rows.push(['Wipe window',at(s.appliedAt+S.sit*MIN)+' to '+at(s.appliedAt+S.wipe*MIN)]);
+  if(s.wipedAt){rows.push(['Wiped',`${at(s.wipedAt)}, ${fmt(s.wipedAt-s.appliedAt)} after applying`]);rows.push(['Checks',`${s.checks||0} done, next at ${at((s.lastCheck||s.wipedAt)+S.check*MIN)}`]);rows.push(['Watch ends',at(s.wipedAt+S.watch*HR)])}
+  return `<div class="detin">${iconHTML(it||{name:s.label},face,'ic big')}<dl>${rows.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl></div>${hasGeo(it)?'<div class="row"><button data-show3d>Show in 3D</button></div>':''}`}
+function show3D(it,face){setView('plan');ensureViewer().then(()=>{if(!V.ready)return;selectItem(it.id);frameItem(it,false,face);$('viewer').scrollIntoView({block:'start'})})}
 $('active').addEventListener('click',e=>{const r=e.target.closest('.r');if(!r)return;const s=st.session.surfaces.find(x=>x.id===r.dataset.id);if(!s)return;
+  if(e.target.closest('.tg')){const open=!r.classList.contains('open');r.classList.toggle('open',open);r.querySelector('.tg').setAttribute('aria-expanded',open);const d=r.querySelector('.det');d.hidden=!open;d.dataset.sig='';tick();return}
+  if(e.target.closest('[data-show3d]')){const it=itemFor(s);if(it)show3D(it,s.face||1);return}
   if(e.target.closest('.go')){if(!s.wipedAt)say(wipe(s));else say(checkOne(s))}
   else if(e.target.closest('[data-rm]')){const b=e.target.closest('[data-rm]');if(b.dataset.arm){snap('Removed '+s.label);st.session.surfaces=st.session.surfaces.filter(x=>x.id!==s.id);save();tick()}else{b.dataset.arm=1;b.textContent='Sure?';setTimeout(()=>{delete b.dataset.arm;b.textContent='Remove'},3000)}}});
 $('queue').addEventListener('click',e=>{const b=e.target.closest('[data-key]');if(!b)return;const t=pending().find(p=>p.key===b.dataset.key);if(t){say(apply(t))}});
@@ -608,21 +880,24 @@ function tick(){
     el.style.setProperty('--c',`var(${ph.c})`);el.classList.toggle('alarm',!!ph.alarm);
     el.querySelector('.nm b').textContent=s.label;
     el.querySelector('.nm span').innerHTML=`<em>${ph.state}</em> · ${esc(ph.detail)}`;
-    el.querySelector('.ck').textContent=ph.clock;el.querySelector('.go').textContent=ph.btn||'';});
+    el.querySelector('.ck').textContent=ph.clock;el.querySelector('.go').textContent=ph.btn||'';
+    const it=itemFor(s),face=s.face||0,isig=hasGeo(it)?iconKey(it,face):'t:'+(it?it.name:s.label),icw=el.querySelector('.icw');
+    if(icw.dataset.k!==isig){icw.dataset.k=isig;icw.innerHTML=iconHTML(it||{name:s.label},face)}
+    if(el.classList.contains('open')){const d=el.querySelector('.det'),dsig=[ph.p,s.wipedAt,s.lastCheck,s.checks,s.label,isig].join('|');if(d.dataset.sig!==dsig){d.dataset.sig=dsig;d.innerHTML=detailHTML(s,ph)}}});
   for(const [id,el] of els)if(!act.find(r=>r.s.id===id)){el.remove();els.delete(id)}
   $('activeEmpty').hidden=act.length>0;
   /* queue */
   const pend=pending(),{per}=pace();
   $('qHead').hidden=$('queue').hidden=!pend.length;
   $('qMeta').textContent=pend.length?`${pend.length} left · about ${dur(pend.length*per)}`:'';
-  const qsig=pend.map(p=>p.key+p.label).join('|');
+  const qsig=pend.map(p=>{const it=findItem(p.itemId);return p.key+p.label+(hasGeo(it)?iconKey(it,p.face):'')}).join('|');
   if(qsig!==lastQueueSig){lastQueueSig=qsig;
-    $('queue').innerHTML=pend.slice(0,60).map((p,i)=>`<div class="r q"><span class="st"></span><div class="nm"><b>${esc(p.label)}</b><span>${r1(p.area)} sq ft</span></div><span class="ck num">${i+1}</span><button class="go" data-key="${esc(p.key)}">Start</button></div>`).join('')+(pend.length>60?`<div class="r q"><span class="st"></span><div class="nm"><span>${pend.length-60} more</span></div></div>`:'');}
+    $('queue').innerHTML=pend.slice(0,60).map((p,i)=>`<div class="r q"><span class="st"></span><div class="tg"><span class="icw">${iconHTML(findItem(p.itemId)||{name:p.label},p.face)}</span><span class="nm"><b>${esc(p.label)}</b><span>${r1(p.area)} sq ft</span></span></div><span class="ck num">${i+1}</span><button class="go" data-key="${esc(p.key)}">Start</button></div>`).join('')+(pend.length>60?`<div class="r q"><span class="st"></span><div class="nm"><span>${pend.length-60} more</span></div></div>`:'');}
   /* done */
   $('doneBox').hidden=!done.length;
   $('doneSum').textContent=`Finished (${done.length})`;
   const dsig=done.map(r=>r.s.id).join();if($('done').dataset.sig!==dsig){$('done').dataset.sig=dsig;
-    $('done').innerHTML=done.map(({s})=>`<div class="r" style="--c:var(--done)"><span class="st"></span><div class="nm"><b>${esc(s.label)}</b><span>wiped ${at(s.wipedAt)} · ${s.checks||0} checks</span></div><span></span><span></span></div>`).join('')}
+    $('done').innerHTML=done.map(({s})=>`<div class="r" style="--c:var(--done)"><span class="st"></span><div class="tg"><span class="icw">${iconHTML(itemFor(s)||{name:s.label},s.face||0)}</span><span class="nm"><b>${esc(s.label)}</b><span>wiped ${at(s.wipedAt)} · ${s.checks||0} checks</span></span></div><span></span><span></span></div>`).join('')}
   /* counts */
   const wet=rows.filter(r=>WET.includes(r.ph.p)).length,watching=rows.filter(r=>r.ph.p==='due'||r.ph.p==='watch').length;
   $('counts').innerHTML=`<b style="color:var(${wet>=S.wet?'--late':'--ink'})">${wet} wet</b> · ${watching} watching · ${done.length} done`;
@@ -706,13 +981,15 @@ $('leaveReset').addEventListener('click',()=>{st.leave={};save();renderLeave()})
 
 /* views */
 function setView(v){st.view=v;save();$('planView').hidden=v!=='plan';$('finishView').hidden=v!=='finish';$('dock').hidden=v!=='finish';document.body.classList.toggle('finishing',v==='finish');
-  $('tab-plan').setAttribute('aria-pressed',v==='plan');$('tab-finish').setAttribute('aria-pressed',v==='finish');if(v==='plan')renderPlan();else tick();window.scrollTo(0,0)}
+  $('tab-plan').setAttribute('aria-pressed',v==='plan');$('tab-finish').setAttribute('aria-pressed',v==='finish');if(v==='plan'){renderPlan();ensureViewer()}else{if($('viewer').classList.contains('full'))toggleFull(false);tick()}window.scrollTo(0,0)}
 $('tab-plan').addEventListener('click',()=>setView('plan'));$('tab-finish').addEventListener('click',()=>setView('finish'));
 $('startBtn').addEventListener('click',()=>{unlock();setView('finish');say('Ready. '+nextAction(Date.now()).verb+' '+nextAction(Date.now()).obj)});
 
+st.plan.flip=st.plan.flip||{};
 prefsUI();renderLeave();renderUndo();renderPlan();setView(st.view==='finish'?'finish':'plan');
+if(st.plan.geom)IDB.get('geom').then(rec=>{if(rec&&rec.meshes&&rec.meshes.length){GEO=buildGeo(rec.meshes);renderPlan();ensureViewer();lastQueueSig='';tick()}else{st.plan.geom=false;save()}});
 setInterval(tick,1000);
-window.__rubio={get st(){return st},nextAction,doNext,undo,planSurfaces,pending,partsFromText,cleanNames};
+window.__rubio={get st(){return st},get V(){return V},get GEO(){return GEO},selectItem,frameItem,pickAt,tapAt,setFaceFromHit,nextAction,doNext,undo,planSurfaces,pending,partsFromText,cleanNames};
 })();
 </script>
 
