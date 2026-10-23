@@ -4,382 +4,715 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Rubio Finish Timers</title>
-<meta name="description" content="Labeled multi-timers for a Rubio Monocoat Oil Plus 2C session: wipe windows, bleed-back checks, and pot life.">
+<meta name="description" content="Timers for a Rubio Monocoat Oil Plus 2C session: plan from a STEP file, one big Next button, wipe windows, bleed-back checks, and pot life.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Layout: one thumb-friendly column, batch strip on top, surface cards sorted by urgency, add bar fixed to the bottom */
+/* Layout: Plan view (load parts, set faces, mix) and Finish view (dense urgency-sorted rows, queue, giant Next dock for gloved hands) */
 :root{
-  --bg:#E9EDEA; --surface:#FFFFFF; --ink:#16201B; --muted:#56635C; --line:#C9D1CC;
+  --bg:#E9EDEA; --surface:#FFFFFF; --sunk:#F3F6F4; --ink:#16201B; --muted:#56635C; --line:#C9D1CC;
   --accent:#8E521A; --accent-ink:#FFFFFF;
   --work:#2D6A89; --wipe:#B87508; --late:#C2410C; --over:#B42318;
-  --watch:#2A7A68; --due:#B87508; --done:#6A7871;
+  --watch:#2A7A68; --due:#B87508; --done:#6A7871; --on-state:#FFFFFF;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#101412; --surface:#1A201D; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2C3531;
+  --bg:#101412; --surface:#1A201D; --sunk:#141917; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2C3531;
   --accent:#D9985A; --accent-ink:#1A120A;
   --work:#6DB6D8; --wipe:#F0B23E; --late:#F8803F; --over:#F26B5E;
-  --watch:#5CC6AD; --due:#F0B23E; --done:#7F8D86; color-scheme:dark }}
+  --watch:#5CC6AD; --due:#F0B23E; --done:#7F8D86; --on-state:#101412; color-scheme:dark }}
 :root[data-theme="dark"]{
-  --bg:#101412; --surface:#1A201D; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2C3531;
+  --bg:#101412; --surface:#1A201D; --sunk:#141917; --ink:#E6ECE8; --muted:#9AA7A0; --line:#2C3531;
   --accent:#D9985A; --accent-ink:#1A120A;
   --work:#6DB6D8; --wipe:#F0B23E; --late:#F8803F; --over:#F26B5E;
-  --watch:#5CC6AD; --due:#F0B23E; --done:#7F8D86; color-scheme:dark }
+  --watch:#5CC6AD; --due:#F0B23E; --done:#7F8D86; --on-state:#101412; color-scheme:dark }
 
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
 body{color:var(--ink);font:16px/1.45 var(--body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  padding-block:16px calc(110px + env(safe-area-inset-bottom,0px))}
-main{max-width:720px;margin:0 auto;display:grid;gap:16px}
-button,input{font:inherit;color:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;min-height:48px;font-weight:600}
-button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
-button.ghost{background:transparent}
+  padding-block:0 40px}
+body.finishing{padding-bottom:calc(min(30vh,170px) + 28px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+main{max-width:760px;margin:0 auto;display:grid;gap:14px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;min-height:46px;font-weight:600;touch-action:manipulation}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,label.file:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.ghost{background:transparent}
 .num{font-variant-numeric:tabular-nums}
+h2{font:700 1.3rem/1.15 var(--display);letter-spacing:.01em;margin:0;text-wrap:balance}
+.k{font:600 .72rem/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.help{color:var(--muted);font-size:.9rem;margin:0;max-width:64ch}
+.warn{color:var(--late);font-weight:600;margin:0}
 
-header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h1{font:700 2rem/1 var(--display);letter-spacing:.01em;margin:0;text-wrap:balance}
-h1 small{display:block;font:500 .8rem/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
-.counts{display:flex;gap:6px;flex-wrap:wrap}
-.pill{font:600 .8rem/1 var(--body);letter-spacing:.04em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
-.pill b{font:700 1rem/1 var(--display);margin-right:4px}
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;background:var(--bg);max-width:760px;margin:0 auto;padding-block:8px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.bar h1{font:700 1.35rem/1 var(--display);margin:0;min-width:0}
+.bar h1 small{display:block;font:600 .68rem/1.3 var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.tabs{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.tabs button{border:0;border-radius:0;min-width:78px;min-height:44px;padding:6px 10px;background:transparent}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
-.batch{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center}
-.batch .k{font:600 .75rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.batch .v{font:700 2.2rem/1 var(--display)}
-.batch .note{grid-column:1/-1;color:var(--muted);font-size:.92rem}
-.batch .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:12px}
+.step-h{display:flex;gap:10px;align-items:baseline}
+.step-h .n{font:700 1.3rem/1 var(--display);color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.grid label{display:grid;gap:4px;font-size:.86rem;color:var(--muted)}
+.grid input,.grid select,textarea{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--sunk);min-height:44px;width:100%}
+textarea{min-height:120px;resize:vertical}
+label.file{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:10px 18px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer}
+label.file input{position:absolute;opacity:0;width:1px;height:1px}
+.status{font-weight:600}
+details>summary{cursor:pointer;font-weight:600;min-height:32px;display:flex;align-items:center}
 
-.gauge{display:grid;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+/* parts editor */
+.parts{display:grid;grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.part{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:8px;padding:10px 12px;background:var(--surface);border-top:1px solid var(--line)}
+.part:first-child{border-top:0}
+.part.skip{background:var(--sunk)}
+.part.skip .pname{color:var(--muted)}
+.ptop{display:flex;gap:8px;align-items:center}
+.ptop input[type=checkbox]{width:24px;height:24px;flex:none;accent-color:var(--accent)}
+.pname{flex:1;min-width:0;border:1px solid transparent;background:transparent;border-radius:8px;padding:6px 8px;font:600 1.15rem/1.2 var(--display);letter-spacing:.01em}
+.pname:hover,.pname:focus{border-color:var(--line);outline:none;background:var(--sunk)}
+.mv{min-width:44px;padding:0;font-size:1.1rem}
+.pmeta{font-size:.86rem;color:var(--muted);padding-left:32px}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-left:32px}
+.seg button{border:0;border-radius:0;min-height:42px;font-size:.92rem;padding:0 4px;min-width:0;background:transparent;border-left:1px solid var(--line)}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.sum{display:flex;gap:18px;flex-wrap:wrap}
+.sum b{font:700 1.8rem/1 var(--display);display:block}
+
+/* gauge */
+.gauge{display:grid;gap:10px;padding-top:12px;border-top:1px solid var(--line)}
 .gauge .total{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .gauge .total b{font:700 2.6rem/1 var(--display);color:var(--accent)}
-.gauge .parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
-.gauge .part{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg)}
-.gauge .part .k{font:600 .72rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.gauge .part .v{font:700 1.6rem/1.1 var(--display);margin-top:4px}
-.bar{height:14px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
-.bar span{display:block;height:100%;background:var(--accent)}
-.warn{color:var(--late);font-weight:600}
-.sweep{display:flex;gap:8px;flex-wrap:wrap}
-.sweep button{flex:1 1 200px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cell{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--sunk)}
+.cell .v{font:700 1.6rem/1.1 var(--display);margin-top:4px}
+.cell .meta{font-size:.86rem;color:var(--muted)}
+.bar2{height:12px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);overflow:hidden}
+.bar2 span{display:block;height:100%;background:var(--accent)}
+.batches{margin:0;padding-left:1.2em;display:grid;gap:4px}
+.big-start{min-height:64px;font:700 1.4rem/1 var(--display);letter-spacing:.03em;text-transform:uppercase}
 
-#list{display:grid;gap:12px}
-.card{--c:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;
-  background-image:linear-gradient(color-mix(in srgb,var(--c) 9%,transparent),color-mix(in srgb,var(--c) 9%,transparent))}
-.card.alarm{border-color:var(--c);box-shadow:0 0 0 2px var(--c)}
-@media (prefers-reduced-motion:no-preference){.card.alarm{animation:pulse 1.4s ease-in-out infinite}}
-@keyframes pulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 45%,transparent)}}
-.top{display:flex;gap:10px;align-items:center}
-.top input{flex:1;min-width:0;border:0;background:transparent;font:600 1.25rem/1.2 var(--display);letter-spacing:.01em;padding:4px 0;border-bottom:1px dashed transparent}
-.top input:hover,.top input:focus{border-bottom-color:var(--line);outline:none}
-.chip{flex:none;font:700 .8rem/1 var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--c);border:1.5px solid var(--c);border-radius:999px;padding:6px 10px}
-.big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.clock{font:700 3rem/1 var(--display);color:var(--c)}
-.sub{font-weight:600}
-.meta{color:var(--muted);font-size:.9rem}
-.acts{display:flex;gap:8px;flex-wrap:wrap}
-.acts .primary{flex:1 1 160px;font-size:1.05rem}
-.card .primary{background:var(--c);color:var(--surface)}
-:root[data-theme="dark"] .card .primary{color:#101412}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card .primary{color:#101412}}
-.card.done .primary{display:none}
-
-.empty{text-align:left;color:var(--muted)}
-.empty h2{font:700 1.4rem/1.1 var(--display);color:var(--ink);margin:0 0 8px}
-.empty ol{margin:0;padding-left:1.2em;display:grid;gap:4px;max-width:60ch}
-
-details.panel summary{cursor:pointer;font:700 1.15rem/1.2 var(--display);letter-spacing:.02em}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px}
-.grid label{display:grid;gap:4px;font-size:.88rem;color:var(--muted)}
-.grid input{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);min-height:44px;width:100%}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.help{color:var(--muted);font-size:.88rem;margin:12px 0 0;max-width:62ch}
+/* finish view */
+.strip{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.strip .bv{font:700 1.35rem/1 var(--display)}
+.strip .bl{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.strip button{min-height:42px;padding:6px 12px}
+.strip .note{grid-column:1/-1;font-size:.84rem;color:var(--muted)}
+.counts{display:flex;gap:6px;flex-wrap:wrap}
+.pill{font:600 .78rem/1 var(--body);letter-spacing:.04em;text-transform:uppercase;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);min-height:32px;display:inline-flex;align-items:center;gap:4px}
+.pill b{font:700 1rem/1 var(--display)}
+button.pill{min-height:36px;padding:6px 12px}
+button.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.listhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.list{display:grid;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.list:empty{display:none}
+.r{--c:var(--muted);display:grid;grid-template-columns:8px minmax(0,1fr) auto auto;align-items:center;gap:0 10px;min-height:58px;border-top:1px solid var(--line);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--c) 10%,transparent),transparent 70%)}
+.r:first-child{border-top:0}
+.r .st{align-self:stretch;background:var(--c)}
+.r .nm{min-width:0;padding-block:6px}
+.r .nm b{display:block;font:600 1.08rem/1.15 var(--display);letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r .nm span{display:block;font-size:.84rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r .nm span em{font-style:normal;font-weight:600;color:var(--c)}
+.r .ck{font:700 1.45rem/1 var(--display);color:var(--c);text-align:right;min-width:56px}
+.r .go{min-width:72px;min-height:46px;margin-right:6px;padding:6px 10px;background:var(--c);color:var(--on-state);border-color:transparent}
+.r.q{--c:var(--line)}
+.r.q .go{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.r.q .ck{color:var(--muted);font-size:1.05rem}
+.r.alarm .st{background:var(--c)}
+@media (prefers-reduced-motion:no-preference){.r.alarm .st{animation:blink 1s steps(2,end) infinite}}
+@keyframes blink{50%{opacity:.25}}
+.r .ed{display:none}
+.editing .r .ed{display:flex;gap:6px;align-items:center;margin-right:6px}
+.editing .r .go{display:none}
+.r .ed input{width:9rem;max-width:40vw;border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--sunk)}
+.addf{display:flex;gap:8px}
+.addf input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--sunk);min-height:48px}
+.voicebox{font-size:.86rem;color:var(--muted)}
 .check{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
 .check:last-of-type{border-bottom:0}
 .check input{width:24px;height:24px;accent-color:var(--accent)}
+.empty{color:var(--muted);padding:14px;border:1px dashed var(--line);border-radius:12px}
 
-.addbar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);
-  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.addbar form{max-width:720px;margin:0 auto;display:flex;gap:8px}
-.addbar input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg);min-height:52px}
-.addbar button{min-height:52px;padding-inline:18px}
+/* dock */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.dock .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;height:min(30vh,170px);min-height:112px}
+.undo{height:100%;display:grid;place-content:center;gap:2px;font:700 1.15rem/1 var(--display);letter-spacing:.04em;text-transform:uppercase}
+.undo small{font:500 .72rem/1.2 var(--body);text-transform:none;letter-spacing:0;color:var(--muted);max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#next{--c:var(--accent);height:100%;border:0;border-radius:16px;background:var(--c);color:var(--on-state);display:grid;align-content:center;justify-items:start;gap:4px;padding:10px 18px;text-align:left;min-width:0;overflow:hidden}
+#next .vb{font:700 clamp(2.2rem,9vw,3.4rem)/.95 var(--display);letter-spacing:.03em;text-transform:uppercase}
+#next .ob{font:600 1.1rem/1.2 var(--body);max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#next .ex{font:500 .9rem/1.2 var(--body);opacity:.85}
+#next.wait{background:var(--sunk);color:var(--ink);border:2px dashed var(--line)}
+#next.locked{filter:saturate(.4) brightness(.92)}
+#next.apply{--c:var(--accent);color:var(--accent-ink)}
 
-#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:6;
-  background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-weight:600;max-width:min(92vw,520px)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));z-index:12;
+  background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-weight:600;max-width:min(92vw,520px);box-shadow:0 6px 20px rgb(0 0 0 / .25)}
 </style>
 
-<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0}</style>
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 </head>
 <body>
+<header class="bar">
+  <h1><small>Rubio Oil Plus 2C</small>Finish timers</h1>
+  <div class="tabs" role="group" aria-label="View">
+    <button id="tab-plan" aria-pressed="false">Plan</button>
+    <button id="tab-finish" aria-pressed="false">Finish</button>
+  </div>
+</header>
+
 <main>
-  <header>
-    <h1><small>Rubio Monocoat Oil Plus 2C</small>Finish timers</h1>
-    <div class="counts" id="counts"></div>
-  </header>
+<!-- ============ PLAN ============ -->
+<section id="planView" class="stack" style="display:grid;gap:14px">
+  <section class="panel">
+    <div class="step-h"><span class="n">1</span><h2>Load your parts</h2></div>
+    <p class="help">Export your model from Fusion 360 as a STEP file. Each component becomes a part with its real surface area. You can also type a list, or skip this and use the Finish tab as a plain timer.</p>
+    <div class="row">
+      <label class="file" for="stepFile">Choose STEP file<input id="stepFile" type="file" accept=".step,.stp,.STEP,.STP"></label>
+      <button id="sample" class="ghost">Load sample bookshelf</button>
+    </div>
+    <div id="stepStatus" class="status" role="status"></div>
+    <details>
+      <summary>Type a list instead</summary>
+      <div style="display:grid;gap:8px;margin-top:8px">
+        <label for="typed" class="help">One part per line. Add an area in sq ft after a comma if you know it, like <b>Shelf 1, 4.6</b>.</label>
+        <textarea id="typed" placeholder="Case&#10;Door left, 8&#10;Door right, 8&#10;Shelf 1&#10;Shelf 2"></textarea>
+        <div class="row"><button id="addTyped">Add to plan</button></div>
+      </div>
+    </details>
+  </section>
 
-  <section class="panel batch" id="batch" aria-label="Batch pot life"></section>
+  <section class="panel">
+    <div class="step-h"><span class="n">2</span><h2>Choose how each part gets finished</h2></div>
+    <p class="help"><b>2 faces</b> makes two timers, face 1 then face 2 after you flip it. <b>Whole</b> is one timer for the whole part. Rename parts here, before the gloves go on. Check several parts and tap <b>Combine</b> to finish them as one piece, like an assembled case.</p>
+    <div class="row">
+      <label for="order" class="muted" style="font-size:.86rem">Order</label>
+      <select id="order" style="border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--sunk);min-height:44px;max-width:100%">
+        <option value="faces">All face 1s first, then flip for face 2s</option>
+        <option value="parts">Both faces of each part back to back</option>
+      </select>
+      <button id="combine" disabled>Combine checked</button>
+      <button id="clearPlan" class="ghost">Clear plan</button>
+    </div>
+    <div id="parts" class="parts"></div>
+    <div id="planEmpty" class="empty">No parts yet. Load a STEP file or type a list above.</div>
+    <div class="sum" id="planSum"></div>
+  </section>
 
-  <details class="panel" id="gaugeBox" open>
-    <summary>How much to mix</summary>
+  <section class="panel">
+    <div class="step-h"><span class="n">3</span><h2>How much to mix</h2></div>
     <div class="grid">
-      <label for="g-time">Time you'll apply from this batch (min)<input id="g-time" type="number" min="10" max="480" step="5" inputmode="numeric"></label>
-      <label for="g-size">Average surface size (sq ft)<input id="g-size" type="number" min="0.25" max="50" step="0.25" inputmode="decimal"></label>
+      <label for="g-time" id="g-time-l">Time you'll apply (min)<input id="g-time" type="number" min="10" max="480" step="5" inputmode="numeric"></label>
+      <label for="g-size">Size of a part with no area (sq ft)<input id="g-size" type="number" min="0.25" max="50" step="0.25" inputmode="decimal"></label>
       <label for="g-apply">Minutes to apply one surface<input id="g-apply" type="number" min="1" max="20" step="0.5" inputmode="decimal"></label>
       <label for="g-wipe">Minutes to wipe one surface<input id="g-wipe" type="number" min="1" max="20" step="0.5" inputmode="decimal"></label>
       <label for="g-cov">Coverage (sq ft per liter)<input id="g-cov" type="number" min="150" max="600" step="10" inputmode="numeric"></label>
       <label for="g-waste">Extra for pads, rags, cup (%)<input id="g-waste" type="number" min="0" max="50" step="5" inputmode="numeric"></label>
-      <label for="g-area">Or enter total area (sq ft, optional)<input id="g-area" type="number" min="0" max="500" step="1" inputmode="decimal" placeholder="Uses the estimate"></label>
     </div>
     <div class="gauge" id="gaugeOut"></div>
-    <p class="help">The estimate uses your sit time and wet-surface limit from Settings: you apply a group, wait for the first one to reach its sit time, then wipe the group. Rubio rates Oil Plus 2C at 300 to 500 sq ft per liter, with open grain like red oak at the low end, so 300 is a safe default. Mixed oil can't be saved, so if your test board used less, lower the coverage number.</p>
-  </details>
-
-  <div class="sweep" id="sweep" hidden>
-    <button class="primary" id="checkAll">Flashlight pass done: mark all checked</button>
-  </div>
-
-  <section id="list" aria-live="polite"></section>
-
-  <section class="panel empty" id="empty">
-    <h2>No surfaces yet</h2>
-    <ol>
-      <li>Tap <b>Mixed a batch</b> when you combine A and B. That starts the pot life clock.</li>
-      <li>Type a surface name below and tap <b>Applied</b> as soon as oil goes on.</li>
-      <li>When the card says <b>Wipe now</b>, wipe it off and tap <b>Wiped</b>.</li>
-      <li>The card then counts down to each bleed-back check. Tap <b>Checked</b> after each flashlight pass until it reads <b>Done</b>.</li>
-    </ol>
+    <p class="help">Rubio rates Oil Plus 2C at 300 to 500 sq ft per liter, and open grain like red oak sits at the low end. STEP areas count every face and edge of a part, so the estimate runs a little high for parts that end up hidden in joinery. Mixed oil can't be saved, so if your test board used less, raise the coverage number.</p>
   </section>
 
-  <section class="panel" aria-label="Before you leave the shop">
-    <h2 style="font:700 1.15rem/1.2 var(--display);margin:0 0 6px">Before you leave the shop</h2>
-    <div id="leave"></div>
-    <div class="row"><button class="ghost" id="leaveReset">Clear checklist</button></div>
-  </section>
+  <button id="startBtn" class="primary big-start">Start finishing</button>
 
   <details class="panel">
-    <summary>Settings and alerts</summary>
+    <summary><h2 style="display:inline">Settings and alerts</h2></summary>
     <div class="grid">
-      <label for="s-sit">Let oil sit before wiping (min)<input id="s-sit" type="number" min="1" max="20" step="1" inputmode="numeric"></label>
+      <label for="s-sit">Let oil sit before wiping (min)<input id="s-sit" type="number" min="1" max="25" step="1" inputmode="numeric"></label>
       <label for="s-wipe">Wipe deadline after applying (min)<input id="s-wipe" type="number" min="10" max="60" step="1" inputmode="numeric"></label>
       <label for="s-check">Bleed-back check every (min)<input id="s-check" type="number" min="10" max="90" step="5" inputmode="numeric"></label>
       <label for="s-watch">Bleed-back watch after wiping (h)<input id="s-watch" type="number" min="1" max="8" step="0.5" inputmode="decimal"></label>
       <label for="s-pot1">Pot life warning (h)<input id="s-pot1" type="number" min="1" max="8" step="0.5" inputmode="decimal"></label>
       <label for="s-pot2">Pot life limit (h)<input id="s-pot2" type="number" min="1" max="8" step="0.5" inputmode="decimal"></label>
-      <label for="s-wet">Warn when this many surfaces are wet<input id="s-wet" type="number" min="1" max="10" step="1" inputmode="numeric"></label>
+      <label for="s-wet">Surfaces wet at once<input id="s-wet" type="number" min="1" max="10" step="1" inputmode="numeric"></label>
     </div>
     <div class="row">
-      <button id="mute"></button>
-      <button id="testSound">Test sound</button>
+      <button id="testSound">Test sound and voice</button>
       <button id="notify">Turn on notifications</button>
     </div>
-    <p class="help">Where the numbers come from: Rubio's data sheet says let the oil absorb a few minutes and remove all excess within 30 minutes at most, and use mixed oil within 4 to 6 hours. Rubio's 2024 US floor instructions say let it react at least 5 minutes, start removing excess around 15 minutes, and finish by 30. A 15 minute sit sits at the long end of that range. A space heater makes the air warm and dry, which shortens the window, so if the oil feels tacky or drags when you wipe, drop the sit time to 10.</p>
-    <p class="help">Bleed-back checks are shop practice for open-grain wood, not a Rubio spec: check every 30 minutes for about 4 hours and wipe any beads. Keep this page open with the screen on; phones pause timers in background tabs, though the times stay accurate when you come back.</p>
-    <div class="row"><button class="ghost" id="clearDone">Remove finished surfaces</button><button class="ghost" id="resetAll">Reset everything</button></div>
+    <p class="help">Where the numbers come from: Rubio's data sheet says let the oil absorb a few minutes, remove all excess within 30 minutes at most, and use mixed oil within 4 to 6 hours. Rubio's 2024 US floor instructions say let it react at least 5 minutes, start removing excess around 15 minutes, and finish by 30. A space heater makes the air warm and dry, which shortens the window, so if the oil feels tacky when you wipe, lower the sit time. Bleed-back checks every 30 minutes for 4 hours are shop practice for open-grain wood, not a Rubio spec.</p>
+    <p class="help"><b>Hands-free control.</b> The big Next button always does the most urgent thing. A Bluetooth keyboard or a page-turner foot pedal works too: Space, Enter, Page Down or Right arrow for Next, and Page Up, Left arrow or Backspace for Undo. Voice control listens for "next", "wiped", "checked", "apply" and "undo" in Chrome, Edge and Safari when the page is opened from its own web address.</p>
+    <div class="row"><button class="ghost" id="resetSession">Clear finishing session</button></div>
   </details>
-</main>
+</section>
 
-<div class="addbar">
-  <form id="addForm" autocomplete="off">
-    <input id="newLabel" list="labels" placeholder="Surface, e.g. Shelf 2 top" aria-label="Surface name">
-    <datalist id="labels"></datalist>
+<!-- ============ FINISH ============ -->
+<section id="finishView" style="display:grid;gap:12px">
+  <div class="strip" id="batch" aria-label="Batch pot life"></div>
+  <div class="row" style="gap:6px">
+    <div class="row" style="gap:6px">
+      <button class="pill" id="t-sound" aria-pressed="true">Sound</button>
+      <button class="pill" id="t-speak" aria-pressed="true">Speak</button>
+      <button class="pill" id="t-voice" aria-pressed="false">Voice control</button>
+    </div>
+  </div>
+  <div id="voiceBox" class="voicebox" hidden></div>
+
+  <div class="listhead"><div class="row" style="gap:10px"><h2>Now</h2><span class="muted num" id="counts"></span></div><button class="pill" id="t-edit" aria-pressed="false">Edit</button></div>
+  <div id="activeWrap">
+    <div id="active" class="list" aria-live="polite"></div>
+    <div id="activeEmpty" class="empty">Nothing wet yet. Tap <b>Apply</b> when oil goes on the first surface.</div>
+  </div>
+  <form id="addForm" class="addf" autocomplete="off" hidden>
+    <input id="newLabel" placeholder="Name a surface and start its timer" aria-label="Surface name">
     <button class="primary" type="submit">Applied</button>
   </form>
+
+  <div class="listhead" id="qHead"><h2>Up next</h2><span class="muted num" id="qMeta"></span></div>
+  <div id="queue" class="list"></div>
+
+  <details class="panel" id="doneBox" hidden>
+    <summary id="doneSum"></summary>
+    <div id="done" class="list"></div>
+  </details>
+
+  <details class="panel">
+    <summary><h2 style="display:inline">Before you leave the shop</h2></summary>
+    <div id="leave"></div>
+    <div class="row"><button class="ghost" id="leaveReset">Clear checklist</button></div>
+  </details>
+</section>
+</main>
+
+<div class="dock" id="dock" hidden>
+  <div class="in">
+    <button class="undo" id="undo" disabled>Undo<small id="undoWhat">nothing yet</small></button>
+    <button id="next" aria-live="polite"><span class="vb" id="nVerb">Apply</span><span class="ob" id="nObj"></span><span class="ex" id="nExtra"></span></button>
+  </div>
 </div>
 <div id="toast" role="status" hidden></div>
 
 <script>
 (function(){
 const KEY='rubio-finish-timers-v1';
-const MIN=60000, HR=3600000;
-const defaults=()=>({v:2,settings:{sit:15,wipe:30,check:30,watch:4,pot1:4,pot2:6,wet:3},gauge:{time:90,size:4,apply:3,wipe:3,cov:300,waste:15,area:''},muted:false,batches:[],surfaces:[],leave:{},seq:1});
-let st;
-try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-if(!st||!st.settings)st=defaults();
-st.settings=Object.assign(defaults().settings,st.settings);
-if(!st.v||st.v<2){if(st.settings.sit===5)st.settings.sit=15;st.v=2}
-st.gauge=Object.assign(defaults().gauge,st.gauge||{});
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const MIN=60000, HR=3600000, MM2_PER_SQFT=92903.04;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
-function fmt(ms){const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}:${pad(m)}:${pad(x)}`:`${m}:${pad(x)}`}
+const fmt=ms=>{const s=Math.max(0,Math.floor(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return h?`${h}:${pad(m)}:${pad(x)}`:`${m}:${pad(x)}`};
 const at=ts=>new Date(ts).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 const uid=()=>Math.random().toString(36).slice(2,9);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=(v,d)=>{const x=parseFloat(v);return x>0?x:d};
+const up5=x=>Math.max(5,Math.ceil(x/5)*5);
+const r1=x=>Math.round(x*10)/10;
+const dur=m=>{m=Math.round(m);const h=Math.floor(m/60);return h?`${h} h ${m%60} min`:`${m} min`};
 
-/* suggestions */
-const sugg=['Case top','Case bottom','Case left side outside','Case right side outside','Case left side inside','Case right side inside','Case back inside','Case face frame / edges','Door L back','Door L front','Door R back','Door R front','Shelf 1 underside','Shelf 1 top','Shelf 2 underside','Shelf 2 top','Shelf 3 underside','Shelf 3 top','Shelf edges'];
-$('labels').innerHTML=sugg.map(s=>`<option value="${esc(s)}">`).join('');
+/* ---------- state ---------- */
+const fresh=()=>({v:3,view:'plan',
+  settings:{sit:15,wipe:30,check:30,watch:4,pot1:4,pot2:6,wet:3},
+  gauge:{time:90,size:4,apply:3,wipe:3,cov:300,waste:15},
+  plan:{items:[],order:'faces',file:''},
+  session:{batches:[],surfaces:[],seq:1},
+  prefs:{muted:false,speak:true},leave:{}});
+let st=null;
+try{st=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!st||typeof st!=='object')st=fresh();
+if(!st.v||st.v<3){ /* migrate v1/v2 */
+  const f=fresh(),old=st;
+  f.settings=Object.assign(f.settings,old.settings||{});
+  if(old.gauge)['size','apply','wipe','cov','waste','time'].forEach(k=>{if(old.gauge[k]!=null&&old.gauge[k]!=='')f.gauge[k]=old.gauge[k]});
+  if(f.settings.sit===5)f.settings.sit=15;
+  f.session={batches:old.batches||[],surfaces:old.surfaces||[],seq:old.seq||1};
+  f.prefs.muted=!!old.muted;f.leave=old.leave||{};
+  f.view=(old.surfaces&&old.surfaces.length)?'finish':'plan';
+  st=f;
+}
+const D=fresh();
+['settings','gauge','prefs'].forEach(k=>st[k]=Object.assign({},D[k],st[k]||{}));
+st.plan=Object.assign({},D.plan,st.plan||{});st.session=Object.assign({},D.session,st.session||{});st.leave=st.leave||{};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
 
-/* sound, vibration, notifications, wake lock */
-let ac=null, wake=null;
-function unlock(){try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){} keepAwake()}
-document.addEventListener('pointerdown',unlock);
-function beep(n=3){if(st.muted||!ac)return;try{const t0=ac.currentTime;for(let i=0;i<n;i++){const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=i%2?1175:880;g.gain.setValueAtTime(0.0001,t0+i*.3);g.gain.exponentialRampToValueAtTime(.25,t0+i*.3+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+i*.3+.2);o.connect(g).connect(ac.destination);o.start(t0+i*.3);o.stop(t0+i*.3+.22)}}catch(e){}}
+/* ---------- sound, speech, notifications, wake lock ---------- */
+let ac=null,wake=null;
+function unlock(){try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}keepAwake()}
+document.addEventListener('pointerdown',unlock);document.addEventListener('keydown',unlock);
+function beep(n=3){if(st.prefs.muted||!ac)return;try{const t0=ac.currentTime;for(let i=0;i<n;i++){const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=i%2?1175:880;g.gain.setValueAtTime(.0001,t0+i*.3);g.gain.exponentialRampToValueAtTime(.25,t0+i*.3+.02);g.gain.exponentialRampToValueAtTime(.0001,t0+i*.3+.2);o.connect(g).connect(ac.destination);o.start(t0+i*.3);o.stop(t0+i*.3+.22)}}catch(e){}}
+function say(text){if(!st.prefs.speak||st.prefs.muted)return;try{const u=new SpeechSynthesisUtterance(text);u.rate=1.05;if(speechSynthesis.pending)speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 async function keepAwake(){try{if('wakeLock' in navigator&&!wake&&document.visibilityState==='visible'){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null})}}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){keepAwake();tick()}});
 let toastT;
-function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4500)}
-function fire(obj,key,title,body){obj.fired=obj.fired||[];if(obj.fired.includes(key))return;obj.fired.push(key);save();beep(key.startsWith('c')?2:3);try{if(!st.muted&&navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}try{if('Notification' in window&&Notification.permission==='granted')new Notification(title,{body,tag:key+obj.id})}catch(e){}toast(title+(body?': '+body:''))}
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,4000)}
+function fire(obj,key,title,body,spoken){obj.fired=obj.fired||[];if(obj.fired.includes(key))return;obj.fired.push(key);save();
+  beep(key.startsWith('c')?2:3);try{if(!st.prefs.muted&&navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted')new Notification(title,{body,tag:key+(obj.id||'')})}catch(e){}
+  toast(title+(body?': '+body:''));say(spoken||title+'. '+(body||''))}
 
-/* phases */
+/* ---------- plan ---------- */
+const MODES=[['skip','Skip'],['one','1 face'],['two','2 faces'],['whole','Whole']];
+const HARDWARE=/\b(hinges?|screws?|bolts?|nuts?|washers?|knobs?|pulls?|handles?|brackets?|pins?|dowels?|cams?|slides?|glides?|magnets?|catch|latch|hardware|fasteners?|levelers?|blum)\b/i;
+function planSurfaces(){
+  const items=st.plan.items.filter(i=>i.mode!=='skip'),size=num(st.gauge.size,4);
+  const A=i=>i.area!=null?i.area:size*(i.mode==='whole'?1:2);
+  const first=[],second=[],out=[];
+  items.forEach(i=>{const a=A(i);
+    if(i.mode==='whole'){const s={key:i.id,label:i.name,area:a};first.push(s);out.push(s)}
+    else if(i.mode==='one'){const s={key:i.id+':1',label:i.name,area:a/2};first.push(s);out.push(s)}
+    else{const s1={key:i.id+':1',label:i.name+' · face 1',area:a/2},s2={key:i.id+':2',label:i.name+' · face 2',area:a/2};first.push(s1);second.push(s2);out.push(s1,s2)}});
+  return st.plan.order==='parts'?out:first.concat(second);
+}
+function pending(){const used=new Set(st.session.surfaces.map(s=>s.key).filter(Boolean));return planSurfaces().filter(s=>!used.has(s.key))}
+function pace(){const S=st.settings,g=st.gauge,a=num(g.apply,3),w=num(g.wipe,3),n=Math.max(1,Math.round(S.wet));return{per:(Math.max(n*a,a+S.sit)+n*w)/n,n}}
+function mlFor(area){const g=st.gauge,raw=area/num(g.cov,300)*1000*(1+Math.max(0,parseFloat(g.waste)||0)/100),A=up5(raw*.75);return{A,B:up5(A/3)}}
+function batchPlan(list){const{per}=pace(),win=st.settings.pot1*60,k=Math.max(1,Math.floor(win/per)),out=[];
+  for(let i=0;i<list.length;i+=k){const sl=list.slice(i,i+k),area=sl.reduce((t,s)=>t+s.area,0);out.push({from:i+1,to:i+sl.length,count:sl.length,area,...mlFor(area)})}return out}
+
+const fmtIn=mm=>{const v=Math.round(mm/25.4*100)/100;return String(v)};
+function itemMeta(i){const bits=[];if(i.dims)bits.push(i.dims.map(fmtIn).join(' × ')+' in');if(i.area!=null)bits.push(r1(i.area)+' sq ft');else bits.push('no area, uses '+num(st.gauge.size,4)+' sq ft');if(i.members)bits.push('combined from '+i.members.length);if(i.qty>1)bits.push(i.qty+' bodies');return bits.join(' · ')}
+function renderPlan(){
+  const box=$('parts'),items=st.plan.items;
+  $('planEmpty').hidden=items.length>0;box.hidden=!items.length;
+  box.innerHTML=items.map((i,ix)=>`<div class="part${i.mode==='skip'?' skip':''}" data-id="${i.id}">
+    <div class="ptop"><input type="checkbox" aria-label="Select ${esc(i.name)}" data-sel ${i.sel?'checked':''}>
+      <input class="pname" id="pn-${i.id}" value="${esc(i.name)}" aria-label="Part name">
+      <button class="mv ghost" data-mv="-1" aria-label="Move up" ${ix===0?'disabled':''}>&#8593;</button><button class="mv ghost" data-mv="1" aria-label="Move down" ${ix===items.length-1?'disabled':''}>&#8595;</button></div>
+    <div class="pmeta num">${esc(itemMeta(i))}${i.members?' <button class="ghost" data-split style="min-height:32px;padding:2px 10px;margin-left:6px">Split</button>':''}</div>
+    <div class="seg" role="group" aria-label="Finish ${esc(i.name)} as">${MODES.map(([m,l])=>`<button data-mode="${m}" aria-pressed="${i.mode===m}">${l}</button>`).join('')}</div></div>`).join('');
+  $('order').value=st.plan.order;
+  $('combine').disabled=items.filter(i=>i.sel).length<2;
+  const ps=planSurfaces(),area=ps.reduce((t,s)=>t+s.area,0),skipped=items.filter(i=>i.mode==='skip').length;
+  $('planSum').innerHTML=items.length?`<div><b class="num">${ps.length}</b><span class="k">timers</span></div><div><b class="num">${r1(area)}</b><span class="k">sq ft</span></div><div><b class="num">${skipped}</b><span class="k">skipped</span></div>`:'';
+  $('g-time-l').hidden=ps.length>0;
+  renderGauge();
+}
+$('parts').addEventListener('click',e=>{
+  const p=e.target.closest('.part');if(!p)return;const items=st.plan.items,ix=items.findIndex(i=>i.id===p.dataset.id),it=items[ix];if(!it)return;
+  const m=e.target.closest('[data-mode]'),mv=e.target.closest('[data-mv]');
+  if(m){it.mode=m.dataset.mode}
+  else if(mv){const j=ix+ +mv.dataset.mv;if(j<0||j>=items.length)return;[items[ix],items[j]]=[items[j],items[ix]]}
+  else if(e.target.closest('[data-split]')){items.splice(ix,1,...it.members.map(x=>Object.assign(x,{sel:false})))}
+  else if(e.target.matches('[data-sel]')){it.sel=e.target.checked}
+  else return;
+  save();renderPlan();
+});
+$('parts').addEventListener('input',e=>{if(!e.target.classList.contains('pname'))return;const it=st.plan.items.find(i=>i.id===e.target.closest('.part').dataset.id);if(it){it.name=e.target.value;save()}});
+$('parts').addEventListener('change',e=>{if(e.target.classList.contains('pname')){const it=st.plan.items.find(i=>i.id===e.target.closest('.part').dataset.id);if(it&&!it.name.trim()){it.name='Part';e.target.value='Part';save()}renderGauge()}});
+$('order').addEventListener('change',e=>{st.plan.order=e.target.value;save();renderPlan()});
+$('combine').addEventListener('click',()=>{const items=st.plan.items,sel=items.filter(i=>i.sel);if(sel.length<2)return;
+  const ix=items.indexOf(sel[0]),known=sel.every(i=>i.area!=null);
+  const merged={id:uid(),name:sel.length<=3?sel.map(i=>i.name).join(' + '):'Combined: '+sel[0].name+' and '+(sel.length-1)+' more',area:known?sel.reduce((t,i)=>t+i.area,0):null,dims:null,mode:'two',members:sel.map(i=>Object.assign({},i,{sel:false}))};
+  st.plan.items=items.filter(i=>!i.sel);st.plan.items.splice(ix,0,merged);save();renderPlan();toast('Combined. Tap the name to rename it, for example "Case".')});
+let clearArmed=false;
+$('clearPlan').addEventListener('click',e=>{if(!clearArmed){clearArmed=true;e.target.textContent='Tap again to clear';setTimeout(()=>{clearArmed=false;e.target.textContent='Clear plan'},3000);return}
+  st.plan.items=[];st.plan.file='';save();renderPlan();e.target.textContent='Clear plan';clearArmed=false;$('stepStatus').textContent=''});
+
+function defaultMode(name,area){return (HARDWARE.test(name)||(area!=null&&area<0.15))?'skip':'two'}
+function setItems(parts,file){
+  st.plan.items=parts.map(p=>({id:uid(),name:p.name,area:p.area,dims:p.dims||null,qty:p.qty||1,mode:defaultMode(p.name,p.area)}));
+  st.plan.file=file||'';save();renderPlan();
+}
+$('addTyped').addEventListener('click',()=>{
+  const lines=$('typed').value.split('\n').map(l=>l.trim()).filter(Boolean);if(!lines.length){toast('Type at least one part name.');return}
+  lines.forEach(l=>{const m=l.match(/^(.*?)[,;\t]\s*([\d.]+)\s*(sq ?ft|ft2)?$/i);const name=(m?m[1]:l).trim()||'Part',area=m?parseFloat(m[2]):null;
+    st.plan.items.push({id:uid(),name,area:area>0?area:null,dims:null,mode:'whole'})});
+  $('typed').value='';save();renderPlan();toast(`Added ${lines.length} parts.`)});
+
+/* ---------- STEP import ---------- */
+const SAMPLE=[['Side:1',603870,[914.4,304.8,19.05]],['Side:2',603870,[914.4,304.8,19.05]],['Top',480483,[723.9,304.8,19.05]],['Bottom',480483,[723.9,304.8,19.05]],['Back',1289030,[876.3,723.9,6.35]],['Shelf:1',432137,[721.9,273.1,19.05]],['Shelf:2',432137,[721.9,273.1,19.05]],['Shelf:3',432137,[721.9,273.1,19.05]],['Door:1',739209,[910.4,379,19.05]],['Door:2',739209,[910.4,379,19.05]],['Blum hinge cup:1',3222,[35,34.7,12]],['Blum hinge cup:2',3222,[35,34.7,12]],['Blum hinge cup:3',3222,[35,34.7,12]],['Blum hinge cup:4',3222,[35,34.7,12]]];
+$('sample').addEventListener('click',()=>{const parts=SAMPLE.map(([raw,a,d])=>({raw,area:a/MM2_PER_SQFT,dims:d}));cleanNames(parts);setItems(parts,'sample');
+  $('stepStatus').textContent='Loaded a sample 30 × 36 × 12 in bookshelf with 14 parts. The 4 hinge cups are set to Skip.'});
+
+function cleanNames(parts){
+  parts.forEach(p=>{let n=String(p.raw||'').trim().replace(/\s+v\d+$/i,'').replace(/\s*\(\d+\)$/,'');const m=n.match(/^(.*?):(\d+)$/);p.base=(m?m[1]:n).trim()||'Part';p.inst=m?+m[2]:null});
+  const cnt={},seen={};parts.forEach(p=>cnt[p.base]=(cnt[p.base]||0)+1);
+  parts.forEach(p=>{if(cnt[p.base]===1)p.name=p.base;else{seen[p.base]=(seen[p.base]||0)+1;p.name=p.base+' '+(p.inst!=null?p.inst:seen[p.base])}});
+  return parts;
+}
+let occtP=null;
+function loadOcct(){
+  if(occtP)return occtP;
+  occtP=(async()=>{
+    if(!window.occtimportjs)await new Promise((res,rej)=>{const s=document.createElement('script');s.src='vendor/occt-import-js.js';s.onload=res;s.onerror=()=>rej(new Error('reader script did not load'));document.head.appendChild(s)});
+    const r=await fetch('vendor/occt-import-js.wasm');if(!r.ok)throw new Error('reader file did not load');
+    const wasmBinary=await r.arrayBuffer();
+    return await window.occtimportjs({wasmBinary,locateFile:f=>'vendor/'+f});
+  })();
+  occtP.catch(()=>{occtP=null});
+  return occtP;
+}
+function meshArea(m){const p=m.attributes.position.array,ix=m.index.array;let a=0;for(let i=0;i<ix.length;i+=3){const A=ix[i]*3,B=ix[i+1]*3,C=ix[i+2]*3,ux=p[B]-p[A],uy=p[B+1]-p[A+1],uz=p[B+2]-p[A+2],vx=p[C]-p[A],vy=p[C+1]-p[A+1],vz=p[C+2]-p[A+2],cx=uy*vz-uz*vy,cy=uz*vx-ux*vz,cz=ux*vy-uy*vx;a+=Math.sqrt(cx*cx+cy*cy+cz*cz)/2}return a}
+function meshBox(m){const p=m.attributes.position.array,mn=[Infinity,Infinity,Infinity],mx=[-Infinity,-Infinity,-Infinity];for(let i=0;i<p.length;i+=3)for(let k=0;k<3;k++){const v=p[i+k];if(v<mn[k])mn[k]=v;if(v>mx[k])mx[k]=v}return mx.map((v,k)=>v-mn[k]).sort((a,b)=>b-a)}
+function partsFromOcct(res){
+  const out=[];
+  (function walk(n){(n.meshes||[]).forEach(i=>{const m=res.meshes[i];out.push({raw:m.name||n.name||'Part',area:meshArea(m)/MM2_PER_SQFT,dims:meshBox(m)})});(n.children||[]).forEach(walk)})(res.root);
+  return out;
+}
+function partsFromText(txt){
+  const prod={},form={},pd={},nauo=[];
+  txt.replace(/#(\d+)\s*=\s*PRODUCT\s*\(\s*'((?:[^']|'')*)'/g,(m,id,n)=>{prod[id]=n.replace(/''/g,"'")});
+  txt.replace(/#(\d+)\s*=\s*PRODUCT_DEFINITION_FORMATION\w*\s*\(([^;]*)\)\s*;/g,(m,id,a)=>{const r=a.match(/#(\d+)/);if(r)form[id]=r[1]});
+  txt.replace(/#(\d+)\s*=\s*PRODUCT_DEFINITION\s*\(([^;]*)\)\s*;/g,(m,id,a)=>{const r=a.match(/#(\d+)/);if(r)pd[id]=prod[form[r[1]]]});
+  txt.replace(/NEXT_ASSEMBLY_USAGE_OCCURRENCE\s*\(\s*'(?:[^']|'')*'\s*,\s*'((?:[^']|'')*)'[^#]*#(\d+)\s*,\s*#(\d+)/g,(m,n,par,ch)=>{nauo.push({name:n.replace(/''/g,"'"),par,ch})});
+  if(!nauo.length)return Object.values(pd).filter(Boolean).map(raw=>({raw,area:null}));
+  const parents=new Set(nauo.map(x=>x.par));
+  return nauo.filter(x=>!parents.has(x.ch)).map(x=>({raw:x.name||pd[x.ch]||'Part',area:null}));
+}
+$('stepFile').addEventListener('change',async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+  const stat=$('stepStatus');stat.textContent=`Reading ${f.name}...`;
+  const buf=await f.arrayBuffer();
+  let parts=null,how='';
+  try{
+    stat.textContent='Loading the STEP reader. It is about 7.6 MB the first time, then cached.';
+    const occt=await loadOcct();
+    stat.textContent=`Measuring parts in ${f.name}...`;await new Promise(r=>setTimeout(r,30));
+    const res=occt.ReadStepFile(new Uint8Array(buf),{linearUnit:'millimeter',linearDeflectionType:'bounding_box_ratio',linearDeflection:0.002,angularDeflection:0.5});
+    if(!res||!res.success)throw new Error('the reader could not open this file');
+    parts=partsFromOcct(res);how='with surface areas';
+  }catch(err){
+    try{parts=partsFromText(new TextDecoder().decode(buf));how=`names only, because ${err.message}. Enter areas by hand or set "Size of a part with no area" below`}catch(e2){parts=null}
+  }
+  if(!parts||!parts.length){stat.textContent=`No parts found in ${f.name}. Check that it is a STEP file (.step or .stp).`;return}
+  cleanNames(parts);setItems(parts,f.name);
+  const sk=st.plan.items.filter(i=>i.mode==='skip').length;
+  stat.textContent=`Found ${parts.length} parts in ${f.name}, ${how}.${sk?` ${sk} small or hardware-looking parts are set to Skip.`:''}`;
+});
+
+/* ---------- gauge ---------- */
+const gmap={'g-time':'time','g-size':'size','g-apply':'apply','g-wipe':'wipe','g-cov':'cov','g-waste':'waste'};
+for(const [id,k] of Object.entries(gmap)){const el=$(id);el.value=st.gauge[k];el.addEventListener('input',()=>{st.gauge[k]=el.value;save();k==='size'?renderPlan():renderGauge()})}
+function renderGauge(){
+  const S=st.settings,{per,n}=pace(),ps=planSurfaces();let list,label;
+  if(ps.length){list=ps;label=`for ${ps.length} timers, ${r1(ps.reduce((t,s)=>t+s.area,0))} sq ft`}
+  else{const time=num(st.gauge.time,90),cnt=Math.max(1,Math.floor(time/per)),size=num(st.gauge.size,4);list=Array.from({length:cnt},()=>({area:size}));label=`for about ${cnt} surfaces of ${size} sq ft in ${time} min`}
+  const area=list.reduce((t,s)=>t+s.area,0),tot=mlFor(area),mins=list.length*per+S.sit,bp=batchPlan(list),pct=Math.min(100,tot.A/275*100);
+  let html=`<div class="total"><b class="num">${tot.A+tot.B} ml</b><span>mixed ${esc(label)}</span></div>
+  <div class="cards">
+    <div class="cell"><div class="k">Part A oil</div><div class="v num">${tot.A} ml</div><div class="meta">Weigh about ${tot.A} g</div></div>
+    <div class="cell"><div class="k">Part B accelerator</div><div class="v num">${tot.B} ml</div><div class="meta">About a third of A, ${tot.B} g</div></div>
+    <div class="cell"><div class="k">Applying time</div><div class="v num">${dur(mins)}</div><div class="meta">${r1(per)} min per surface, ${n} wet at once</div></div>
+  </div>
+  <div><div class="meta muted" style="font-size:.86rem;margin-bottom:6px">${Math.round(tot.A/275*100)}% of one 275 ml can of Part A</div><div class="bar2" role="img" aria-label="${Math.round(pct)} percent of one can"><span style="width:${pct}%"></span></div></div>`;
+  if(bp.length>1)html+=`<div><p class="warn">That runs past the ${S.pot1} h pot life, so mix ${bp.length} batches as you go:</p><ol class="batches num">${bp.map(b=>`<li>Surfaces ${b.from} to ${b.to}: ${b.A} ml A + ${b.B} ml B</li>`).join('')}</ol></div>`;
+  if(tot.A>550)html+=`<p class="warn">That's more Part A than two 275 ml cans hold.</p>`;
+  html+=`<p class="help">Plan on ${S.watch} more hours of bleed-back checks after the last wipe.</p>`;
+  $('gaugeOut').innerHTML=html;
+}
+
+/* ---------- session logic ---------- */
 function phase(s,now){
   const S=st.settings;
-  if(!s.wipedAt){const t=now-s.appliedAt;
-    if(t<S.sit*MIN)return{p:'work',chip:'Working in',c:'--work',clock:fmt(S.sit*MIN-t),sub:'until wipe-off',rank:t};
-    if(t<(S.wipe-5)*MIN)return{p:'wipe',chip:'Wipe now',c:'--wipe',clock:fmt(S.wipe*MIN-t),sub:`left before the ${S.wipe} min limit`,alarm:true,rank:t};
-    if(t<S.wipe*MIN)return{p:'late',chip:'Wipe now',c:'--late',clock:fmt(S.wipe*MIN-t),sub:'left. Wipe this one next',alarm:true,rank:t};
-    return{p:'over',chip:'Overdue',c:'--over',clock:'+'+fmt(t-S.wipe*MIN),sub:'past the wipe limit. Wipe it now',alarm:true,rank:t}}
+  if(!s.wipedAt){const sitEnd=s.appliedAt+S.sit*MIN,dl=s.appliedAt+S.wipe*MIN;
+    if(now<sitEnd)return{p:'sit',c:'--work',state:'Sitting',detail:'wipe at '+at(sitEnd),clock:fmt(sitEnd-now),act:sitEnd,btn:'Wipe'};
+    if(now<dl-5*MIN)return{p:'wipe',c:'--wipe',state:'Wipe now',detail:'done by '+at(dl),clock:fmt(dl-now),act:sitEnd,alarm:true,btn:'Wipe'};
+    if(now<dl)return{p:'late',c:'--late',state:'Wipe now',detail:'done by '+at(dl),clock:fmt(dl-now),act:sitEnd,alarm:true,btn:'Wipe'};
+    return{p:'over',c:'--over',state:'Overdue',detail:'limit was '+at(dl),clock:'+'+fmt(now-dl),act:sitEnd,alarm:true,btn:'Wipe'}}
   const end=s.wipedAt+S.watch*HR;
-  if(now>=end)return{p:'done',chip:'Done',c:'--done',clock:'Done',sub:'bleed-back watch over',rank:-1};
+  if(now>=end)return{p:'done',c:'--done',state:'Done',detail:'watch ended '+at(end),clock:'',act:Infinity};
   const due=(s.lastCheck||s.wipedAt)+S.check*MIN;
-  if(now>=due)return{p:'due',chip:'Check now',c:'--due',clock:fmt(now-due),sub:'since check was due. Look for beads',alarm:true,rank:now-due,due};
-  return{p:'watch',chip:'Bleed-back watch',c:'--watch',clock:fmt(due-now),sub:'until next check · watch ends '+at(end),rank:-(due-now),due};
+  if(now>=due)return{p:'due',c:'--due',state:'Check',detail:'wipe any beads',clock:now-due<60000?'now':'+'+fmt(now-due),act:due,alarm:true,btn:'Checked'};
+  return{p:'watch',c:'--watch',state:'Watching',detail:'check at '+at(due),clock:fmt(due-now),act:due,btn:'Check'};
 }
-const group={over:0,late:0,wipe:0,due:1,work:2,watch:3,done:4};
-
-/* list rendering (keyed) */
-const els=new Map();
-function makeCard(s){
-  const a=document.createElement('article');a.className='card';a.dataset.id=s.id;
-  a.innerHTML=`<div class="top"><input aria-label="Surface name" id="lbl-${s.id}"><span class="chip"></span></div>
-  <div class="big"><span class="clock num"></span><span class="sub"></span></div>
-  <div class="meta num"></div>
-  <div class="acts"><button class="primary" data-act="main"></button><button data-act="back" hidden>Started 1 min earlier</button><button class="ghost" data-act="rm">Remove</button></div>`;
-  const inp=a.querySelector('input');inp.value=s.label;
-  inp.addEventListener('change',()=>{s.label=inp.value.trim()||s.label;inp.value=s.label;save()});
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur()});
-  els.set(s.id,a);return a;
-}
-function tick(){
-  const now=Date.now(),S=st.settings,list=$('list');
-  let wet=0,watching=0,done=0,anyDue=false;
-  const rows=st.surfaces.map(s=>({s,ph:phase(s,now)}));
-  rows.sort((a,b)=>group[a.ph.p]-group[b.ph.p]||b.ph.rank-a.ph.rank);
-  rows.forEach(({s,ph},i)=>{
-    if(['work','wipe','late','over'].includes(ph.p))wet++;else if(ph.p==='done')done++;else watching++;
-    if(ph.p==='due')anyDue=true;
-    /* alerts */
-    if(!s.wipedAt){const t=now-s.appliedAt;
-      if(t>=S.sit*MIN)fire(s,'sit','Wipe now',s.label);
-      if(t>=(S.wipe-5)*MIN)fire(s,'w5','5 minutes left to wipe',s.label);
-      if(t>=S.wipe*MIN)fire(s,'w0','Wipe limit passed',s.label);
-    }else if(ph.p==='due')fire(s,'c'+(s.lastCheck||s.wipedAt),'Bleed-back check',s.label);
-    else if(ph.p==='done')fire(s,'done','Finished watching',s.label);
-    let el=els.get(s.id)||makeCard(s);
-    if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null);
-    el.style.setProperty('--c',`var(${ph.c})`);
-    el.classList.toggle('alarm',!!ph.alarm);el.classList.toggle('done',ph.p==='done');
-    el.querySelector('.chip').textContent=ph.chip;
-    el.querySelector('.clock').textContent=ph.clock;
-    el.querySelector('.sub').textContent=ph.sub;
-    const m=['Applied '+at(s.appliedAt)];
-    if(s.wipedAt)m.push('wiped '+at(s.wipedAt)+' ('+fmt(s.wipedAt-s.appliedAt)+' after applying)');
-    if(s.checks)m.push(s.checks+(s.checks===1?' check':' checks'));
-    el.querySelector('.meta').textContent=m.join(' · ');
-    const main=el.querySelector('[data-act=main]'),back=el.querySelector('[data-act=back]');
-    main.textContent=s.wipedAt?(ph.p==='due'?'Checked, no beads left':'Checked early'):'Wiped';
-    back.hidden=!!s.wipedAt;
-  });
-  for(const [id,el] of els)if(!st.surfaces.find(s=>s.id===id)){el.remove();els.delete(id)}
-  $('empty').hidden=st.surfaces.length>0;
-  $('sweep').hidden=watching===0;
-  $('checkAll').textContent=anyDue?`Flashlight pass done: mark all ${watching} checked`:`Checked all ${watching} early`;
-  $('counts').innerHTML=`<span class="pill num" style="border-color:var(${wet>=S.wet?'--late':'--line'})"><b>${wet}</b>wet</span><span class="pill num"><b>${watching}</b>watching</span><span class="pill num"><b>${done}</b>done</span>`;
-  renderBatch(now);
+const WET=['sit','wipe','late','over'],READY=['wipe','late','over'];
+const hasPlan=()=>planSurfaces().length>0;
+function nextAction(now){
+  const S=st.settings,rows=st.session.surfaces.map(s=>({s,ph:phase(s,now)}));
+  const ready=rows.filter(r=>READY.includes(r.ph.p)).sort((a,b)=>a.s.appliedAt-b.s.appliedAt);
+  if(ready.length){const r=ready[0];return{kind:'wipe',target:r.s,verb:'Wipe',obj:r.s.label,extra:r.ph.p==='over'?'Past the wipe limit':r.ph.clock+' left'+(ready.length>1?` · ${ready.length-1} more waiting`:''),c:r.ph.c}}
+  const watching=rows.filter(r=>r.ph.p==='due'||r.ph.p==='watch'),due=watching.filter(r=>r.ph.p==='due');
+  if(due.length)return{kind:'check',verb:'Checked',obj:`Flashlight pass on ${watching.length} ${watching.length===1?'surface':'surfaces'}`,extra:'Tap after wiping any beads',c:'--due'};
+  const wet=rows.filter(r=>r.ph.p==='sit').length,pend=pending();
+  if(wet<S.wet&&(pend.length||!hasPlan())){const t=pend[0];return{kind:'apply',target:t||null,verb:'Apply',obj:t?t.label:'Surface '+st.session.seq,extra:pend.length?`${pend.length} left in the plan`:'Tap when oil goes on',c:'--accent'}}
+  const sitting=rows.filter(r=>r.ph.p==='sit').sort((a,b)=>a.ph.act-b.ph.act);
+  if(sitting.length)return{kind:'wait',verb:'Wait',obj:`Wipe ${sitting[0].s.label} in ${fmt(sitting[0].ph.act-now)}`,extra:`${wet} wet, limit is ${S.wet}`};
+  if(watching.length){const w=watching.sort((a,b)=>a.ph.act-b.ph.act)[0];return{kind:'wait',verb:'Wait',obj:`Next check at ${at(w.ph.act)}`,extra:`${watching.length} under bleed-back watch`}}
+  return{kind:'idle',verb:'All done',obj:rows.length?'Every surface is finished':'Nothing planned',extra:''};
 }
 
-/* batch */
-function renderBatch(now){
-  const S=st.settings,b=st.batches[st.batches.length-1],box=$('batch');
-  if(!b){box.innerHTML=`<div><div class="k">Batch</div><div class="note" style="margin-top:6px">No batch mixed yet. Pot life starts when A and B are combined.</div></div><div class="acts"><button class="primary" data-b="new">Mixed a batch</button></div>`;return}
-  const t=now-b.mixedAt,w=S.pot1*HR,lim=S.pot2*HR;
-  let v,k,note,c;
-  if(t<w){v=fmt(w-t);k=`Batch ${b.n} · mixed ${at(b.mixedAt)}`;note=`Good to use. ${S.pot1} h mark at ${at(b.mixedAt+w)}.`;c='--watch'}
-  else if(t<lim){v=fmt(lim-t);k=`Batch ${b.n} · mixed ${at(b.mixedAt)}`;note=`Past ${S.pot1} h. Finish what you're on and mix fresh for new surfaces.`;c='--wipe';fire(b,'p1','Pot life warning','Batch '+b.n)}
-  else{v='Spent';k=`Batch ${b.n} · mixed ${at(b.mixedAt)}`;note=`Past ${S.pot2} h. Don't use this batch.`;c='--over';fire(b,'p2','Pot life over','Batch '+b.n)}
-  const sig=k+v+note;if(box.dataset.sig===sig)return;box.dataset.sig=sig;
-  box.innerHTML=`<div><div class="k">${esc(k)}</div><div class="v num" style="color:var(${c})">${v}</div></div><div class="acts"><button data-b="new">Mixed a new batch</button></div><div class="note">${esc(note)}</div>`;
-}
-$('batch').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;st.batches.push({id:uid(),n:st.batches.length+1,mixedAt:Date.now()});st.batches=st.batches.slice(-5);save();$('batch').dataset.sig='';tick();toast('Batch '+st.batches.length+' started. Recap the accelerator.')});
+/* undo */
+const undoStack=[];
+function snap(label){undoStack.push({label,data:JSON.stringify(st.session)});if(undoStack.length>40)undoStack.shift();renderUndo()}
+function renderUndo(){const u=undoStack[undoStack.length-1];$('undo').disabled=!u;$('undoWhat').textContent=u?u.label:'nothing yet'}
+function undo(){const u=undoStack.pop();if(!u){say('Nothing to undo');return}st.session=JSON.parse(u.data);save();renderUndo();els.forEach(e=>e.remove());els.clear();tick();toast('Undid: '+u.label);say('Undid '+u.label)}
 
-/* actions */
-const armed=new Map();
-$('list').addEventListener('click',e=>{
-  const btn=e.target.closest('[data-act]');if(!btn)return;
-  const id=btn.closest('.card').dataset.id,s=st.surfaces.find(x=>x.id===id);if(!s)return;
-  const act=btn.dataset.act,now=Date.now();
-  if(act==='main'){if(!s.wipedAt){s.wipedAt=now;s.lastCheck=now;toast(`${s.label} wiped. First check at ${at(now+st.settings.check*MIN)}.`)}else{s.lastCheck=now;s.checks=(s.checks||0)+1}}
-  if(act==='back'){s.appliedAt-=MIN}
-  if(act==='rm'){if(armed.get(id)){st.surfaces=st.surfaces.filter(x=>x.id!==id);armed.delete(id)}else{armed.set(id,1);btn.textContent='Tap again to remove';setTimeout(()=>{armed.delete(id);btn.textContent='Remove'},3000);return}}
+function batchOK(){const b=st.session.batches[st.session.batches.length-1];return b&&Date.now()-b.mixedAt<st.settings.pot2*HR}
+let warnedBatch=false;
+function apply(t){
+  const now=Date.now(),label=t?t.label:('Surface '+st.session.seq);
+  snap('Applied '+label);if(!t)st.session.seq++;
+  st.session.surfaces.push({id:uid(),key:t?t.key:null,label,area:t?t.area:null,appliedAt:now,fired:[]});
   save();tick();
+  const msg=`${label} started. Wipe at ${at(now+st.settings.sit*MIN)}.`;
+  if(!batchOK()&&!warnedBatch){warnedBatch=true;toast(msg+' Tap Mixed when you mix a batch so pot life is tracked.')}else toast(msg);
+  return 'Applied '+label;
+}
+function wipe(s){const now=Date.now();snap('Wiped '+s.label);s.wipedAt=now;s.lastCheck=now;save();tick();toast(`${s.label} wiped. First check at ${at(now+st.settings.check*MIN)}.`);return 'Wiped '+s.label}
+function checkAll(){const now=Date.now(),S=st.settings,list=st.session.surfaces.filter(s=>s.wipedAt&&now<s.wipedAt+S.watch*HR);if(!list.length)return null;
+  snap(`Checked ${list.length}`);list.forEach(s=>{s.lastCheck=now;s.checks=(s.checks||0)+1});save();tick();toast(`Marked ${list.length} checked. Next pass at ${at(now+S.check*MIN)}.`);return `Checked ${list.length}`}
+
+function checkOne(s){const now=Date.now();snap('Checked '+s.label);s.lastCheck=now;s.checks=(s.checks||0)+1;save();tick();toast(`${s.label} checked. Next at ${at(now+st.settings.check*MIN)}.`);return 'Checked '+s.label}
+let lockUntil=0;
+function doNext(src){
+  const now=Date.now();if(now<lockUntil)return;
+  const na=nextAction(now);let done=null;
+  if(na.kind==='wipe')done=wipe(na.target);
+  else if(na.kind==='check')done=checkAll();
+  else if(na.kind==='apply')done=apply(na.target);
+  else{toast(na.obj);say(na.obj);return}
+  lockUntil=Date.now()+900;$('next').classList.add('locked');setTimeout(()=>{$('next').classList.remove('locked');tick()},900);
+  const after=nextAction(Date.now());
+  say(done+'. '+(after.kind==='wait'||after.kind==='idle'?after.obj:'Next, '+after.verb+' '+after.obj));
+}
+function command(kind){
+  const now=Date.now(),rows=st.session.surfaces.map(s=>({s,ph:phase(s,now)}));let done=null;
+  if(kind==='wipe'){const w=rows.filter(r=>WET.includes(r.ph.p)).sort((a,b)=>a.s.appliedAt-b.s.appliedAt)[0];if(w)done=wipe(w.s);else return say('Nothing to wipe')}
+  else if(kind==='check'){done=checkAll();if(!done)return say('Nothing to check')}
+  else if(kind==='apply'){done=apply(pending()[0]||null)}
+  lockUntil=Date.now()+900;say(done);
+}
+
+/* ---------- finish view render ---------- */
+const els=new Map();
+function rowEl(s){
+  let el=els.get(s.id);if(el)return el;
+  el=document.createElement('div');el.className='r';el.dataset.id=s.id;
+  el.innerHTML=`<span class="st"></span><div class="nm"><b></b><span></span></div><span class="ck num"></span><button class="go"></button><div class="ed"><input aria-label="Rename"><button class="ghost" data-rm>Remove</button></div>`;
+  const inp=el.querySelector('.ed input');inp.value=s.label;
+  inp.addEventListener('change',()=>{const x=st.session.surfaces.find(q=>q.id===s.id);if(x&&inp.value.trim()){x.label=inp.value.trim();save();tick()}});
+  els.set(s.id,el);return el;
+}
+$('active').addEventListener('click',e=>{const r=e.target.closest('.r');if(!r)return;const s=st.session.surfaces.find(x=>x.id===r.dataset.id);if(!s)return;
+  if(e.target.closest('.go')){if(!s.wipedAt)say(wipe(s));else say(checkOne(s))}
+  else if(e.target.closest('[data-rm]')){const b=e.target.closest('[data-rm]');if(b.dataset.arm){snap('Removed '+s.label);st.session.surfaces=st.session.surfaces.filter(x=>x.id!==s.id);save();tick()}else{b.dataset.arm=1;b.textContent='Sure?';setTimeout(()=>{delete b.dataset.arm;b.textContent='Remove'},3000)}}});
+$('queue').addEventListener('click',e=>{const b=e.target.closest('[data-key]');if(!b)return;const t=pending().find(p=>p.key===b.dataset.key);if(t){say(apply(t))}});
+
+let lastQueueSig='';
+function tick(){
+  const now=Date.now(),S=st.settings;
+  const rows=st.session.surfaces.map(s=>({s,ph:phase(s,now)}));
+  const act=rows.filter(r=>r.ph.p!=='done').sort((a,b)=>a.ph.act-b.ph.act||a.s.appliedAt-b.s.appliedAt);
+  const done=rows.filter(r=>r.ph.p==='done');
+  /* alerts */
+  rows.forEach(({s,ph})=>{
+    if(!s.wipedAt){const t=now-s.appliedAt;
+      if(t>=S.sit*MIN)fire(s,'sit','Wipe now',s.label,'Wipe '+s.label);
+      if(t>=(S.wipe-5)*MIN)fire(s,'w5','5 minutes left to wipe',s.label,'Five minutes left to wipe '+s.label);
+      if(t>=S.wipe*MIN)fire(s,'w0','Wipe limit passed',s.label,s.label+' is past the wipe limit. Wipe it now.');
+    }else if(ph.p==='due')fire(s,'c'+(s.lastCheck||s.wipedAt),'Bleed-back check',s.label,'Check for bleed back');
+  });
+  /* active list */
+  const list=$('active');
+  act.forEach(({s,ph},i)=>{const el=rowEl(s);if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null);
+    el.style.setProperty('--c',`var(${ph.c})`);el.classList.toggle('alarm',!!ph.alarm);
+    el.querySelector('.nm b').textContent=s.label;
+    el.querySelector('.nm span').innerHTML=`<em>${ph.state}</em> · ${esc(ph.detail)}`;
+    el.querySelector('.ck').textContent=ph.clock;el.querySelector('.go').textContent=ph.btn||'';});
+  for(const [id,el] of els)if(!act.find(r=>r.s.id===id)){el.remove();els.delete(id)}
+  $('activeEmpty').hidden=act.length>0;
+  /* queue */
+  const pend=pending(),{per}=pace();
+  $('qHead').hidden=$('queue').hidden=!pend.length;
+  $('qMeta').textContent=pend.length?`${pend.length} left · about ${dur(pend.length*per)}`:'';
+  const qsig=pend.map(p=>p.key+p.label).join('|');
+  if(qsig!==lastQueueSig){lastQueueSig=qsig;
+    $('queue').innerHTML=pend.slice(0,60).map((p,i)=>`<div class="r q"><span class="st"></span><div class="nm"><b>${esc(p.label)}</b><span>${r1(p.area)} sq ft</span></div><span class="ck num">${i+1}</span><button class="go" data-key="${esc(p.key)}">Start</button></div>`).join('')+(pend.length>60?`<div class="r q"><span class="st"></span><div class="nm"><span>${pend.length-60} more</span></div></div>`:'');}
+  /* done */
+  $('doneBox').hidden=!done.length;
+  $('doneSum').textContent=`Finished (${done.length})`;
+  const dsig=done.map(r=>r.s.id).join();if($('done').dataset.sig!==dsig){$('done').dataset.sig=dsig;
+    $('done').innerHTML=done.map(({s})=>`<div class="r" style="--c:var(--done)"><span class="st"></span><div class="nm"><b>${esc(s.label)}</b><span>wiped ${at(s.wipedAt)} · ${s.checks||0} checks</span></div><span></span><span></span></div>`).join('')}
+  /* counts */
+  const wet=rows.filter(r=>WET.includes(r.ph.p)).length,watching=rows.filter(r=>r.ph.p==='due'||r.ph.p==='watch').length;
+  $('counts').innerHTML=`<b style="color:var(${wet>=S.wet?'--late':'--ink'})">${wet} wet</b> · ${watching} watching · ${done.length} done`;
+  renderBatch(now);renderNext(now);
+}
+function renderNext(now){
+  const na=nextAction(now),b=$('next');
+  b.className=na.kind==='wait'||na.kind==='idle'?'wait':na.kind==='apply'?'apply':'';
+  if(Date.now()<lockUntil)b.classList.add('locked');
+  b.style.setProperty('--c',`var(${na.c||'--accent'})`);
+  $('nVerb').textContent=na.verb;$('nObj').textContent=na.obj;$('nExtra').textContent=na.extra||'';
+  b.setAttribute('aria-label',`${na.verb}: ${na.obj}`);
+}
+function renderBatch(now){
+  const S=st.settings,b=st.session.batches[st.session.batches.length-1],box=$('batch');
+  const pend=pending(),{per}=pace();let sug='';
+  if(pend.length){const k=Math.max(1,Math.floor(S.pot1*60/per)),sl=pend.slice(0,k),ml=mlFor(sl.reduce((t,s)=>t+s.area,0));sug=`Mix ${ml.A} g A + ${ml.B} g B for the next ${sl.length} ${sl.length===1?'surface':'surfaces'}.`}
+  let k='Batch',v='',note='',c='--muted',btn='Mixed';
+  if(!b){v='Not mixed';note=sug||'Tap Mixed when A and B are combined to track pot life.'}
+  else{const t=now-b.mixedAt,w=S.pot1*HR,lim=S.pot2*HR;k=`Batch ${b.n} · ${at(b.mixedAt)}`;btn='Mixed new';
+    if(t<w){v=fmt(w-t)+' left';c='--watch';note=`Good to use until ${at(b.mixedAt+w)}.`}
+    else if(t<lim){v=fmt(lim-t)+' left';c='--wipe';note=`Past ${S.pot1} h. Mix fresh for new surfaces. ${sug}`;fire(b,'p1','Pot life warning','Batch '+b.n,'Batch '+b.n+' is past '+S.pot1+' hours')}
+    else{v='Spent';c='--over';note=`Past ${S.pot2} h. Don't use it. ${sug}`;fire(b,'p2','Pot life over','Batch '+b.n,'Batch '+b.n+' is past its pot life')}}
+  const sig=k+v+note;if(box.dataset.sig===sig)return;box.dataset.sig=sig;
+  box.innerHTML=`<div class="bl"><span class="k">${esc(k)}</span><span class="bv num" style="color:var(${c})">${esc(v)}</span></div><button data-b>${btn}</button><div class="note">${esc(note)}</div>`;
+}
+$('batch').addEventListener('click',e=>{if(!e.target.closest('[data-b]'))return;snap('Mixed batch');const B=st.session.batches;B.push({id:uid(),n:B.length+1,mixedAt:Date.now()});st.session.batches=B.slice(-6);save();$('batch').dataset.sig='';tick();toast('Batch started. Recap the accelerator.');say('Batch '+B.length+' started')});
+
+/* ---------- controls ---------- */
+$('next').addEventListener('click',()=>{unlock();doNext('tap')});
+$('undo').addEventListener('click',undo);
+document.addEventListener('keydown',e=>{
+  if(st.view!=='finish')return;const tg=e.target;if(tg&&(tg.tagName==='INPUT'||tg.tagName==='TEXTAREA'||tg.tagName==='SELECT'))return;
+  if(tg&&tg.tagName==='BUTTON'&&tg.id!=='next'&&(e.key===' '||e.key==='Enter'))return;
+  if([' ','Enter','PageDown','ArrowRight','MediaPlayPause'].includes(e.key)){e.preventDefault();if(!e.repeat)doNext('key')}
+  else if(['PageUp','ArrowLeft','Backspace'].includes(e.key)){e.preventDefault();if(!e.repeat)undo()}
 });
-$('checkAll').addEventListener('click',()=>{const now=Date.now();let n=0;st.surfaces.forEach(s=>{if(s.wipedAt&&now<s.wipedAt+st.settings.watch*HR){s.lastCheck=now;s.checks=(s.checks||0)+1;n++}});save();tick();toast(`Marked ${n} surfaces checked.`)});
-$('addForm').addEventListener('submit',e=>{
-  e.preventDefault();unlock();
-  const inp=$('newLabel');const label=inp.value.trim()||('Surface '+st.seq);st.seq++;
-  st.surfaces.push({id:uid(),label,appliedAt:Date.now()});inp.value='';save();tick();
-  const wet=st.surfaces.filter(s=>!s.wipedAt).length;
-  if(wet>st.settings.wet)toast(`${wet} surfaces wet. Wipe the oldest before adding more.`);else toast(`${label} started. Wipe at ${at(Date.now()+st.settings.sit*MIN)}.`);
-});
+/* after a finger tap, drop focus so a pedal's Space or Enter goes to Next instead of re-pressing that button */
+$('finishView').addEventListener('click',e=>{if(e.detail>0&&e.target.closest('button'))setTimeout(()=>{const a=document.activeElement;if(a&&a.tagName==='BUTTON')a.blur()},0)});
+$('dock').addEventListener('click',e=>{if(e.detail>0)setTimeout(()=>{const a=document.activeElement;if(a&&a.tagName==='BUTTON')a.blur()},0)});
+$('t-edit').addEventListener('click',e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);$('activeWrap').classList.toggle('editing',on);$('addForm').hidden=!on});
+$('addForm').addEventListener('submit',e=>{e.preventDefault();unlock();const v=$('newLabel').value.trim();say(apply(v?{key:null,label:v,area:null}:null));$('newLabel').value=''});
+function prefsUI(){$('t-sound').setAttribute('aria-pressed',!st.prefs.muted);$('t-speak').setAttribute('aria-pressed',st.prefs.speak);$('t-speak').disabled=st.prefs.muted}
+$('t-sound').addEventListener('click',()=>{st.prefs.muted=!st.prefs.muted;save();prefsUI()});
+$('t-speak').addEventListener('click',()=>{st.prefs.speak=!st.prefs.speak;save();prefsUI();if(st.prefs.speak)say('Voice alerts on')});
+$('testSound').addEventListener('click',()=>{unlock();const m=st.prefs.muted,sp=st.prefs.speak;st.prefs.muted=false;st.prefs.speak=true;beep(3);say('Wipe shelf 1, face 1');st.prefs.muted=m;st.prefs.speak=sp;if(m)toast('Sound is off on the Finish tab.')});
+$('notify').addEventListener('click',async()=>{try{if(!('Notification' in window))throw 0;const r=await Notification.requestPermission();toast(r==='granted'?'Notifications on.':'Notifications were not allowed. Sound and spoken alerts still work.')}catch(e){toast('Notifications are not available here. Sound and spoken alerts still work.')}});
+
+/* voice control */
+let rec=null,voiceOn=false;
+function voiceUI(msg){$('t-voice').setAttribute('aria-pressed',voiceOn);$('voiceBox').hidden=!voiceOn&&!msg;$('voiceBox').textContent=msg||(voiceOn?'Listening for "next", "wiped", "checked", "apply", "undo".':'')}
+function heard(t){const w=t.toLowerCase().replace(/[^a-z\s]/g,' ').split(/\s+/),has=(...k)=>k.some(x=>w.includes(x));
+  voiceUI(`Heard "${t}"`);
+  if(has('undo','oops'))undo();
+  else if(has('wipe','wiped','wiping','wipes'))command('wipe');
+  else if(has('check','checked','checks'))command('check');
+  else if(has('apply','applied','oil','oiled'))command('apply');
+  else if(has('next','done','go','okay','ok'))doNext('voice');}
+function startVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){voiceUI('Voice control needs Chrome, Edge or Safari, opened from the app\'s own web address.');return}
+  try{rec=new SR();rec.continuous=true;rec.interimResults=false;rec.lang='en-US';
+    rec.onresult=e=>{const r=e.results[e.results.length-1];if(r&&r[0])heard(r[0].transcript.trim())};
+    rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'||e.error==='audio-capture'){voiceOn=false;voiceUI('The microphone is blocked here. Open the app from its own web address and allow the microphone.')}};
+    rec.onend=()=>{if(voiceOn)setTimeout(()=>{try{rec.start()}catch(e){}},250)};
+    rec.start();voiceOn=true;voiceUI();say('Listening')}catch(e){voiceOn=false;voiceUI('Voice control could not start here.')}}
+$('t-voice').addEventListener('click',()=>{unlock();if(voiceOn){voiceOn=false;try{rec&&rec.stop()}catch(e){}voiceUI()}else startVoice()});
 
 /* settings */
-const map={'s-sit':'sit','s-wipe':'wipe','s-check':'check','s-watch':'watch','s-pot1':'pot1','s-pot2':'pot2','s-wet':'wet'};
-for(const [id,k] of Object.entries(map)){const el=$(id);el.value=st.settings[k];el.addEventListener('change',()=>{const v=parseFloat(el.value);if(v>0){st.settings[k]=v;save();$('batch').dataset.sig='';tick()}else el.value=st.settings[k]})}
-const muteLabel=()=>$('mute').textContent=st.muted?'Sound is off: turn on':'Sound is on: mute';
-muteLabel();
-$('mute').addEventListener('click',()=>{st.muted=!st.muted;save();muteLabel()});
-$('testSound').addEventListener('click',()=>{unlock();const m=st.muted;st.muted=false;beep(3);st.muted=m;if(m)toast('Sound is muted for alerts.')});
-$('notify').addEventListener('click',async()=>{try{if(!('Notification' in window))throw 0;const r=await Notification.requestPermission();toast(r==='granted'?'Notifications on.':'Notifications were not allowed. Sound and on-screen alerts still work.')}catch(e){toast('Notifications are not available here. Sound and on-screen alerts still work.')}});
-$('clearDone').addEventListener('click',()=>{const now=Date.now();st.surfaces=st.surfaces.filter(s=>phase(s,now).p!=='done');save();tick()});
+const smap={'s-sit':'sit','s-wipe':'wipe','s-check':'check','s-watch':'watch','s-pot1':'pot1','s-pot2':'pot2','s-wet':'wet'};
+for(const [id,k] of Object.entries(smap)){const el=$(id);el.value=st.settings[k];el.addEventListener('change',()=>{const v=parseFloat(el.value);if(v>0){st.settings[k]=v;save();$('batch').dataset.sig='';renderGauge();tick()}else el.value=st.settings[k]})}
 let resetArmed=false;
-$('resetAll').addEventListener('click',e=>{if(!resetArmed){resetArmed=true;e.target.textContent='Tap again to erase all timers';setTimeout(()=>{resetArmed=false;e.target.textContent='Reset everything'},3000);return}
-  const keep={settings:st.settings,muted:st.muted};st=Object.assign(defaults(),keep);save();els.forEach(el=>el.remove());els.clear();$('batch').dataset.sig='';renderLeave();tick();e.target.textContent='Reset everything';resetArmed=false});
+$('resetSession').addEventListener('click',e=>{if(!resetArmed){resetArmed=true;e.target.textContent='Tap again to erase timers';setTimeout(()=>{resetArmed=false;e.target.textContent='Clear finishing session'},3000);return}
+  snap('Cleared session');st.session={batches:[],surfaces:[],seq:1};st.leave={};save();els.forEach(el=>el.remove());els.clear();renderLeave();tick();resetArmed=false;e.target.textContent='Clear finishing session';toast('Session cleared. Undo on the Finish tab brings it back.')});
 
 /* leave checklist */
 const leaveItems=[['rags','Rags and pads laid flat outside, or sealed in water in a metal can'],['heater','Space heater off'],['accel','Accelerator and oil cans capped'],['pass','Last flashlight pass on every watching surface']];
 function renderLeave(){$('leave').innerHTML=leaveItems.map(([k,t])=>`<label class="check" for="lv-${k}"><input type="checkbox" id="lv-${k}" data-k="${k}" ${st.leave[k]?'checked':''}><span>${t}</span></label>`).join('')}
-renderLeave();
 $('leave').addEventListener('change',e=>{st.leave[e.target.dataset.k]=e.target.checked;save()});
 $('leaveReset').addEventListener('click',()=>{st.leave={};save();renderLeave()});
 
-/* mix gauge */
-const gmap={'g-time':'time','g-size':'size','g-apply':'apply','g-wipe':'wipe','g-cov':'cov','g-waste':'waste','g-area':'area'};
-for(const [id,k] of Object.entries(gmap)){const el=$(id);el.value=st.gauge[k];el.addEventListener('input',()=>{st.gauge[k]=el.value;save();renderGauge()})}
-const up5=x=>Math.ceil(x/5)*5;
-function renderGauge(){
-  const g=st.gauge,S=st.settings,num=(v,d)=>{const x=parseFloat(v);return x>0?x:d};
-  const time=num(g.time,90),size=num(g.size,4),a=num(g.apply,3),w=num(g.wipe,3),cov=num(g.cov,300),waste=Math.max(0,parseFloat(g.waste)||0),n=Math.max(1,Math.round(S.wet));
-  const cycle=Math.max(n*a,a+S.sit)+n*w, per=cycle/n;
-  const surfaces=Math.max(1,Math.floor(time/per));
-  const override=parseFloat(g.area)>0?parseFloat(g.area):0;
-  const area=override||surfaces*size;
-  const raw=area/cov*1000*(1+waste/100);
-  const A=up5(raw*0.75), B=up5(A/3), total=A+B;
-  const pct=Math.min(100,A/275*100);
-  const potMin=S.pot1*60, batches=Math.ceil(time/potMin);
-  let notes=[];
-  if(time>potMin)notes.push(`<p class="warn">That's longer than the ${S.pot1} h pot life. Mix ${batches} batches of about ${up5(A/batches)} ml A + ${up5(A/batches/3)} ml B, one at the start of each ${S.pot1} h stretch.</p>`);
-  if(A>550)notes.push(`<p class="warn">That's more Part A than your two 275 ml cans hold.</p>`);
-  $('gaugeOut').innerHTML=`
-    <div class="total"><b class="num">${total} ml</b><span>mixed, for ${override?'':'about '+surfaces+' surfaces, '}${Math.round(area*10)/10} sq ft</span></div>
-    <div class="parts">
-      <div class="part"><div class="k">Part A oil</div><div class="v num">${A} ml</div><div class="meta">Weigh about ${A} g</div></div>
-      <div class="part"><div class="k">Part B accelerator</div><div class="v num">${B} ml</div><div class="meta">Add a third of A's weight, about ${B} g</div></div>
-      <div class="part"><div class="k">Pace</div><div class="v num">${Math.round(per*10)/10} min</div><div class="meta">per surface, groups of ${n}</div></div>
-    </div>
-    <div><div class="meta" style="margin-bottom:6px">${Math.round(pct)}% of one 275 ml can of Part A</div><div class="bar" role="img" aria-label="${Math.round(pct)} percent of one can"><span style="width:${pct}%"></span></div></div>
-    ${notes.join('')}`;
-}
-renderGauge();
-document.querySelectorAll('#s-sit,#s-wet').forEach(el=>el.addEventListener('change',renderGauge));
+/* views */
+function setView(v){st.view=v;save();$('planView').hidden=v!=='plan';$('finishView').hidden=v!=='finish';$('dock').hidden=v!=='finish';document.body.classList.toggle('finishing',v==='finish');
+  $('tab-plan').setAttribute('aria-pressed',v==='plan');$('tab-finish').setAttribute('aria-pressed',v==='finish');if(v==='plan')renderPlan();else tick();window.scrollTo(0,0)}
+$('tab-plan').addEventListener('click',()=>setView('plan'));$('tab-finish').addEventListener('click',()=>setView('finish'));
+$('startBtn').addEventListener('click',()=>{unlock();setView('finish');say('Ready. '+nextAction(Date.now()).verb+' '+nextAction(Date.now()).obj)});
 
-tick();setInterval(tick,1000);
+prefsUI();renderLeave();renderUndo();renderPlan();setView(st.view==='finish'?'finish':'plan');
+setInterval(tick,1000);
+window.__rubio={get st(){return st},nextAction,doNext,undo,planSurfaces,pending,partsFromText,cleanNames};
 })();
 </script>
 
